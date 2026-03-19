@@ -1,6 +1,1 @@
-Projekt polega na stworzeniu systemu rozproszonego, w którym użytkownik za pomocą aplikacji webo-
-wej wysyła zadanie obliczeniowe do serwera. Serwer nie wykonuje obliczeń samodzielnie – przekazuje
-je do urządzenia Raspberry Pi, które pełni rolę zewnętrznego modułu obliczeniowego. Po wykonaniu
-zadania wynik wraca do serwera i następnie do użytkownika. System umożliwia śledzenie pełnego
-przepływu danych między klientem, serwerem i urządzeniem. Komunikacja jest zabezpieczona kryp-
-tograficznie bez użycia HTTPS
+Projekt polega na stworzeniu systemu rozproszonego, w którym użytkownik za pomocą aplikacji webowej wysyła zadanie obliczeniowe do serwera. Serwer nie wykonuje obliczeń samodzielnie – przekazuje je do urządzenia Raspberry Pi, które pełni rolę zewnętrznego modułu obliczeniowego. Po wykonaniu zadania wynik wraca do serwera i następnie do użytkownika. System umożliwia śledzenie pełnego przepływu danych między klientem, serwerem i urządzeniem. Komunikacja jest zabezpieczona kryptograficznie bez użycia HTTPS
