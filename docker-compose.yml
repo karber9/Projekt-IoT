@@ -21,5 +21,15 @@ services:
     ports:
       - "1883:1883"
 
+  frontend:
+    build: ./frontend
+    container_name: iot_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
 volumes:
   postgres_data:
