@@ -3,25 +3,50 @@
 import { useState } from "react";
 import { createTask, TaskResponse } from "@/lib/api";
 
+const ALLOWED_OPERATIONS = ["add", "subtract", "multiply", "divide"] as const;
+type Operation = (typeof ALLOWED_OPERATIONS)[number];
+
 export default function Home() {
-  const [operation, setOperation] = useState("");
+  const [operation, setOperation] = useState<Operation>("add");
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [response, setResponse] = useState<TaskResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const parseNumber = (value: string): number | null => {
+    if (value.trim() === "") {
+      return null;
+    }
+
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+
+    return parsed;
+  };
+
   const handleSubmit = async () => {
     setError("");
     setResponse(null);
 
-    if (!operation.trim()) {
-      setError("Insert operation to perform.");
+    if (!ALLOWED_OPERATIONS.includes(operation)) {
+      setError("Selected operation is not allowed.");
       return;
     }
 
-    if (a === "" || b === "") {
-      setError("Insert values for a and b.");
+    const parsedA = parseNumber(a);
+    const parsedB = parseNumber(b);
+
+    if (parsedA === null || parsedB === null) {
+      setError("A and B must be valid finite numbers.");
+      return;
+    }
+
+    if (operation === "divide" && parsedB === 0) {
+      setError("B cannot be 0 when dividing.");
       return;
     }
 
@@ -29,9 +54,9 @@ export default function Home() {
 
     try {
       const data = await createTask({
-        operation: operation.trim(),
-        a: Number(a),
-        b: Number(b),
+        operation,
+        a: parsedA,
+        b: parsedB,
       });
 
       setResponse(data);
@@ -53,7 +78,7 @@ export default function Home() {
           FastAPI Task Sender
         </h1>
         <p className="mb-8 text-sm text-slate-500">
-          Send a task to the FastAPI backend and see the response. 
+          Send a task to the FastAPI backend and see the response.
           Fill in the form below and click Send button to submit.
         </p>
 
@@ -65,14 +90,18 @@ export default function Home() {
             >
               Operation
             </label>
-            <input
+            <select
               id="operation"
-              type="text"
               value={operation}
-              onChange={(e) => setOperation(e.target.value)}
-              placeholder="eg. add, subtract, multiply, divide"
+              onChange={(e) => setOperation(e.target.value as Operation)}
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            />
+            >
+              {ALLOWED_OPERATIONS.map((op) => (
+                <option key={op} value={op}>
+                  {op}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -88,6 +117,7 @@ export default function Home() {
               value={a}
               onChange={(e) => setA(e.target.value)}
               placeholder="eg. 2"
+              step="any"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -105,6 +135,7 @@ export default function Home() {
               value={b}
               onChange={(e) => setB(e.target.value)}
               placeholder="eg. 3"
+              step="any"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
