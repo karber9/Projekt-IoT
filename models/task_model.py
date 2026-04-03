@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.orm import DeclarativeBase
 
 #Base class for all SQLAlchemy models
@@ -10,6 +12,9 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True)
-    status = Column(String)
-    payload = Column(String)
-    result = Column(String)
+    status = Column(String, nullable=False, default="queued")
+    payload = Column(String, nullable=False)
+    result = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True),
+                                  nullable=False,
+                                  default=lambda: datetime.now(timezone.utc))
