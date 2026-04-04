@@ -5,6 +5,8 @@ import { createTask, TaskResponse } from "@/lib/api";
 import OperationForm from "@/components/OperationForm";
 import OperationResponseCard from "@/components/OperationResponseCard";
 import ErrorAlert from "@/components/ErrorAlert";
+import DevicesPanel from "@/components/DevicesPanel";
+import ConnectionStatusPanel from "@/components/ConnectionStatusPanel";
 import { validateOperationValues } from "@/features/validation";
 import type { Operation } from "@/features/types";
 
@@ -51,30 +53,54 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-10">
-      <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-3xl font-bold text-slate-800">
-          FastAPI Task Sender
-        </h1>
-        <p className="mb-8 text-sm text-slate-500">
-          Send a task to the FastAPI backend and see the response. Fill in the
-          form below and click Send button to submit.
+  <main className="min-h-screen bg-slate-100">
+    <div className="mx-auto max-w-7xl px-4 py-6">
+      <header className="flex flex-col gap-2 rounded-2xl bg-white p-6 shadow-sm">
+        <p className="text-sm font-medium uppercase tracking-wide text-blue-600">
+          Control Center
         </p>
+        <h1 className="text-3xl font-bold text-slate-800">
+          Operations Dashboard
+        </h1>
+        <p className="text-sm text-slate-500">
+          Send operations to the backend, monitor responses, and prepare the app
+          for device communication and connection tracking.
+        </p>
+      </header>
 
-        <OperationForm
-          operation={operation}
-          setOperation={setOperation}
-          a={a}
-          setA={setA}
-          b={b}
-          setB={setB}
-          loading={loading}
-          onSubmit={handleSubmit}
-        />
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="rounded-2xl bg-white p-8 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-slate-800">
+              Send operation
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose an operation, enter values, and send the request to the
+              server.
+            </p>
+          </div>
 
-        <ErrorAlert message={error} />
-        <OperationResponseCard response={response} />
+          <OperationForm
+            operation={operation}
+            setOperation={setOperation}
+            a={a}
+            setA={setA}
+            b={b}
+            setB={setB}
+            loading={loading}
+            onSubmit={handleSubmit}
+          />
+
+          <ErrorAlert message={error} />
+          <OperationResponseCard response={response} />
+        </section>
+
+        <aside className="space-y-6">
+          <DevicesPanel />
+          <ConnectionStatusPanel />
+        </aside>
       </div>
-    </main>
-  );
+    </div>
+  </main>
+ );
 }
