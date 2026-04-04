@@ -1,4 +1,4 @@
-import { mockDevices } from "@/data/mockDevices";
+import { mockLogs } from "@/data/mockDevices";
 
 type DevicesPanelProps = {
   selectedDeviceId: string;
@@ -19,7 +19,7 @@ export default function DevicesPanel({
       </div>
 
       <div className="space-y-4">
-        {mockDevices.map((device) => {
+        {mockLogs.map((device) => {
           const isSelected = selectedDeviceId === device.id;
 
           return (
@@ -36,8 +36,8 @@ export default function DevicesPanel({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-slate-800">{device.name}</h3>
-                    {device.type === "server" && (
+                    <h3 className="font-medium text-slate-800">{device.deviceId}</h3>
+                    {device.deviceId === "server" && (
                       <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
                         default
                       </span>
@@ -48,39 +48,28 @@ export default function DevicesPanel({
 
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    device.status === "online"
+                    device.level === "success"
                       ? "bg-green-100 text-green-700"
                       : "bg-slate-200 text-slate-600"
                   }`}
                 >
-                  {device.status}
+                  {device.level}
                 </span>
               </div>
 
               <div className="mt-4 space-y-2 text-sm text-slate-600">
                 <p>
                   <span className="font-medium text-slate-700">Route mode:</span>{" "}
-                  {device.routeMode}
+                  {device.id}
                 </p>
-                <p>
-                  <span className="font-medium text-slate-700">Topic:</span>{" "}
-                  {device.topic}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-700">Last outbound:</span>{" "}
-                  {device.lastOutbound}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-700">Last inbound:</span>{" "}
-                  {device.lastInbound}
-                </p>
+                
 
                 <div>
                   <p className="mb-1 font-medium text-slate-700">
                     Payload preview:
                   </p>
                   <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 text-xs text-slate-100">
-                    {device.payloadPreview}
+                    {device.message}
                   </pre>
                 </div>
               </div>

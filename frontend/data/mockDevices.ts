@@ -1,44 +1,67 @@
-// data/mockDevices.ts
-export type Device = {
+export type LogItem = {
   id: string;
-  name: string;
-  status: "online" | "offline";
-  lastSeen: string;
-  topic: string;
-  serverConnection: "connected" | "disconnected";
-  heartbeat: string;
-  activity: string;
+  deviceId: string;
+  timestamp: string;
+  level: "info" | "success" | "warning" | "error";
+  source: "server" | "mqtt" | "device";
+  message: string;
 };
 
-export const mockDevices: Device[] = [
+export const mockLogs: LogItem[] = [
   {
-    id: "dev-001",
-    name: "Conveyor Controller",
-    status: "online",
-    lastSeen: "just now",
-    topic: "factory/conveyor/dev-001",
-    serverConnection: "connected",
-    heartbeat: "2s ago",
-    activity: "Idle",
+    id: "log-001",
+    deviceId: "server",
+    timestamp: "12:41:03",
+    level: "info",
+    source: "server",
+    message: "Task request received from dashboard.",
   },
   {
-    id: "dev-002",
-    name: "Sorting Arm",
-    status: "online",
-    lastSeen: "10s ago",
-    topic: "factory/sorter/dev-002",
-    serverConnection: "connected",
-    heartbeat: "5s ago",
-    activity: "Waiting for task",
+    id: "log-002",
+    deviceId: "server",
+    timestamp: "12:41:04",
+    level: "success",
+    source: "mqtt",
+    message: "Router selected an available destination client.",
   },
   {
-    id: "dev-003",
-    name: "Packaging Unit",
-    status: "offline",
-    lastSeen: "3m ago",
-    topic: "factory/packaging/dev-003",
-    serverConnection: "disconnected",
-    heartbeat: "No recent heartbeat",
-    activity: "Unavailable",
+    id: "log-003",
+    deviceId: "dev-001",
+    timestamp: "12:41:05",
+    level: "info",
+    source: "mqtt",
+    message: "Operation forwarded to Conveyor Controller.",
+  },
+  {
+    id: "log-004",
+    deviceId: "dev-001",
+    timestamp: "12:41:06",
+    level: "success",
+    source: "device",
+    message: "Device acknowledged operation execution.",
+  },
+  {
+    id: "log-005",
+    deviceId: "dev-002",
+    timestamp: "12:42:10",
+    level: "info",
+    source: "server",
+    message: "Sorting Arm remains idle with no pending tasks.",
+  },
+  {
+    id: "log-006",
+    deviceId: "dev-003",
+    timestamp: "12:43:12",
+    level: "warning",
+    source: "mqtt",
+    message: "Packaging Unit heartbeat delayed.",
+  },
+  {
+    id: "log-007",
+    deviceId: "dev-003",
+    timestamp: "12:43:20",
+    level: "error",
+    source: "device",
+    message: "Device disconnected before task confirmation.",
   },
 ];
