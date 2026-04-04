@@ -10,14 +10,21 @@ import LogsPanel from "@/components/LogsPanel";
 import DashboardHeader from "@/components/DashboardHeader";
 import { validateOperationValues } from "@/features/validation";
 import type { Operation } from "@/features/types";
+import { mockDevices } from "@/data/mockDevices";
 
 export default function Home() {
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>(
+    mockDevices[0].id
+  );
   const [operation, setOperation] = useState<Operation>("add");
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [response, setResponse] = useState<TaskResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const selectedDevice = mockDevices.find(
+    (device) => device.id === selectedDeviceId
+  );
 
   const handleSubmit = async () => {
     setError("");
@@ -60,10 +67,19 @@ export default function Home() {
   
         <div className="mt-6 grid gap-6 lg:grid-cols-8">
           <div className="lg:col-span-2">
-            <DevicesPanel />
+            <DevicesPanel 
+              selectedDeviceId={selectedDeviceId}
+              onSelectDevice={setSelectedDeviceId}
+            />
           </div>
-
+          
           <section className="rounded-2xl bg-white p-8 shadow-sm lg:col-span-3">
+          <div className="mb-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+            Target destination:{" "}
+            <span className="font-semibold">
+              {selectedDevice?.name ?? "Unknown device"}
+            </span>
+          </div>
             <OperationForm
               operation={operation}
               setOperation={setOperation}

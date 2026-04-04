@@ -1,10 +1,93 @@
-export default function DevicesPanel() {
-    return (
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
+import { mockDevices } from "@/data/mockDevices";
+
+type DevicesPanelProps = {
+  selectedDeviceId: string;
+  onSelectDevice: (deviceId: string) => void;
+};
+
+export default function DevicesPanel({
+  selectedDeviceId,
+  onSelectDevice,
+}: DevicesPanelProps) {
+  return (
+    <section className="rounded-2xl bg-white p-6 shadow-sm">
+      <div className="mb-4">
         <h2 className="text-lg font-semibold text-slate-800">Devices</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Device list will appear here once MQTT device integration is added.
+        <p className="mt-1 text-sm text-slate-500">
+          Select a destination device and inspect recent communication flow.
         </p>
-      </section>
-    );
-  }
+      </div>
+
+      <div className="space-y-4">
+        {mockDevices.map((device) => {
+          const isSelected = selectedDeviceId === device.id;
+
+          return (
+            <button
+              key={device.id}
+              type="button"
+              onClick={() => onSelectDevice(device.id)}
+              className={`block w-full rounded-xl border p-4 text-left transition ${
+                isSelected
+                  ? "border-blue-500 bg-blue-50 shadow-sm"
+                  : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-slate-800">{device.name}</h3>
+                    {device.type === "server" && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                        default
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500">{device.id}</p>
+                </div>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    device.status === "online"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {device.status}
+                </span>
+              </div>
+
+              <div className="mt-4 space-y-2 text-sm text-slate-600">
+                <p>
+                  <span className="font-medium text-slate-700">Route mode:</span>{" "}
+                  {device.routeMode}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Topic:</span>{" "}
+                  {device.topic}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Last outbound:</span>{" "}
+                  {device.lastOutbound}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Last inbound:</span>{" "}
+                  {device.lastInbound}
+                </p>
+
+                <div>
+                  <p className="mb-1 font-medium text-slate-700">
+                    Payload preview:
+                  </p>
+                  <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 text-xs text-slate-100">
+                    {device.payloadPreview}
+                  </pre>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
