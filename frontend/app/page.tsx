@@ -6,7 +6,6 @@ import OperationForm from "@/components/OperationForm";
 import OperationResponseCard from "@/components/OperationResponseCard";
 import ErrorAlert from "@/components/ErrorAlert";
 import DevicesPanel from "@/components/DevicesPanel";
-import ConnectionStatusPanel from "@/components/ConnectionStatusPanel";
 import LogsPanel from "@/components/LogsPanel";
 import DashboardHeader from "@/components/DashboardHeader";
 import { validateOperationValues } from "@/features/validation";
@@ -56,25 +55,34 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-100">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
+      <div className="mx-auto px-16 py-16">
         <DashboardHeader />
   
-        <OperationForm
-          operation={operation}
-          setOperation={setOperation}
-          a={a}
-          setA={setA}
-          b={b}
-          setB={setB}
-          loading={loading}
-          onSubmit={handleSubmit}
-        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-8">
+          <div className="lg:col-span-2">
+            <DevicesPanel />
+          </div>
+
+          <section className="rounded-2xl bg-white p-8 shadow-sm lg:col-span-3">
+            <OperationForm
+              operation={operation}
+              setOperation={setOperation}
+              a={a}
+              setA={setA}
+              b={b}
+              setB={setB}
+              loading={loading}
+              onSubmit={handleSubmit}
+            />
   
-        <ErrorAlert message={error} />
-        <OperationResponseCard response={response} />
-  
-        <DevicesPanel />
-        <LogsPanel />
+            <ErrorAlert message={error} />
+            <OperationResponseCard response={response} />
+          </section>
+
+          <div className="lg:col-span-3">
+            <LogsPanel />
+          </div>
+        </div>
       </div>
     </main>
   );
