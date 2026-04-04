@@ -9,12 +9,12 @@ export type LogItem = {
 
 export const mockLogs: LogItem[] = [
   {
-    id: "log-001",
-    deviceId: "server",
-    timestamp: "12:41:03",
+    id: "server",
+    deviceId: "automatic",
+    timestamp: "core/router",
     level: "info",
     source: "server",
-    message: "Task request received from dashboard.",
+    message: '{"operation":"add","a":2,"b":3}',
   },
   {
     id: "log-002",

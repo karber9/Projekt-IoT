@@ -77,10 +77,12 @@ export default function Home() {
           <section className="rounded-2xl bg-white p-8 shadow-sm lg:col-span-3">
           <div className="mb-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
             Target destination:{" "}
-            <span className="font-semibold">
-              {selectedDevice?.id ?? "Unknown device"}
-            </span>
-          </div>
+                  <span className="font-semibold">
+                    {selectedDevice?.id === "server"
+                      ? "Automatic server routing"
+                      : selectedDevice?.source ?? "Unknown device"}
+                  </span>
+                </div>
             <OperationForm
               operation={operation}
               setOperation={setOperation}

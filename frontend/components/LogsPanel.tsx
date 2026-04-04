@@ -12,14 +12,19 @@ const levelClasses = {
 };
 
 export default function LogsPanel({ selectedDeviceId }: LogsPanelProps) {
-  const filteredLogs = mockLogs.filter((log) => log.id === selectedDeviceId);
+  const filteredLogs =
+    selectedDeviceId === "server"
+      ? mockLogs
+      : mockLogs.filter((log) => log.id === selectedDeviceId);
 
   return (
     <section className="rounded-2xl bg-white p-6 shadow-sm">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-slate-800">Activity logs</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Recent communication for the selected destination.
+          {selectedDeviceId === "server"
+            ? "Showing all recent communication routed through the server."
+            : "Showing logs for the selected device."}
         </p>
       </div>
 
