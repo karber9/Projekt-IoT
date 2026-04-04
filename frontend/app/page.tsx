@@ -7,6 +7,7 @@ import OperationResponseCard from "@/components/OperationResponseCard";
 import ErrorAlert from "@/components/ErrorAlert";
 import DevicesPanel from "@/components/DevicesPanel";
 import ConnectionStatusPanel from "@/components/ConnectionStatusPanel";
+import LogsPanel from "@/components/LogsPanel";
 import { validateOperationValues } from "@/features/validation";
 import type { Operation } from "@/features/types";
 
@@ -98,6 +99,7 @@ export default function Home() {
         <aside className="space-y-6">
           <DevicesPanel />
           <ConnectionStatusPanel />
+          <LogsPanel />
         </aside>
       </div>
     </div>
