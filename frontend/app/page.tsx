@@ -63,18 +63,18 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-100">
-      <div className="mx-auto px-16 py-16">
+      <div className="mx-auto flex h-screen flex-col px-16 py-16 overflow-y-hidden">
         <DashboardHeader />
   
-        <div className="mt-6 grid gap-6 lg:grid-cols-8">
-          <div className="lg:col-span-2">
+        <div className="mt-6 grid flex-1 gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-2 h-5/6">
             <DevicesPanel 
               selectedDeviceId={selectedDeviceId}
               onSelectDevice={setSelectedDeviceId}
             />
           </div>
           
-          <section className="rounded-2xl bg-white p-8 shadow-sm lg:col-span-3">
+          <section className="rounded-2xl bg-white p-8 shadow-sm lg:col-span-4 h-5/6">
           <div className="mb-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
             Target destination:{" "}
                   <span className="font-semibold">
@@ -97,8 +97,15 @@ export default function Home() {
             <ErrorAlert message={error} />
             <OperationResponseCard response={response} />
           </section>
+          
+          <div className="lg:col-span-2 h-5/6">
+            <DevicesPanel 
+              selectedDeviceId={selectedDeviceId}
+              onSelectDevice={setSelectedDeviceId}
+            />
+          </div>
 
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4 h-5/6">
             <LogsPanel selectedDeviceId={selectedDeviceId} />
           </div>
         </div>

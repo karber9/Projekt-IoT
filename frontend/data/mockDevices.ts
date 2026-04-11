@@ -1,67 +1,51 @@
 export type LogItem = {
   id: string;
-  deviceId: string;
-  timestamp: string;
-  level: "info" | "success" | "warning" | "error";
-  source: "server" | "mqtt" | "device";
-  message: string;
+  status: string;
 };
 
 export const mockLogs: LogItem[] = [
   {
-    id: "server",
-    deviceId: "automatic",
-    timestamp: "core/router",
-    level: "info",
-    source: "server",
-    message: '{"operation":"add","a":2,"b":3}',
+    id: "dev_001",
+    status: "online",
   },
   {
-    id: "log-002",
-    deviceId: "server",
-    timestamp: "12:41:04",
-    level: "success",
-    source: "mqtt",
-    message: "Router selected an available destination client.",
+    id: "dev_002",
+    status: "offline",
   },
   {
-    id: "log-003",
-    deviceId: "dev-001",
-    timestamp: "12:41:05",
-    level: "info",
-    source: "mqtt",
-    message: "Operation forwarded to Conveyor Controller.",
+    id: "dev_003",
+    status: "online",
   },
   {
-    id: "log-004",
-    deviceId: "dev-001",
-    timestamp: "12:41:06",
-    level: "success",
-    source: "device",
-    message: "Device acknowledged operation execution.",
+    id: "dev_004",
+    status: "online",
   },
   {
-    id: "log-005",
-    deviceId: "dev-002",
-    timestamp: "12:42:10",
-    level: "info",
-    source: "server",
-    message: "Sorting Arm remains idle with no pending tasks.",
+    id: "dev_005",
+    status: "online",
   },
   {
-    id: "log-006",
-    deviceId: "dev-003",
-    timestamp: "12:43:12",
-    level: "warning",
-    source: "mqtt",
-    message: "Packaging Unit heartbeat delayed.",
+    id: "dev_006",
+    status: "online",
   },
   {
-    id: "log-007",
-    deviceId: "dev-003",
-    timestamp: "12:43:20",
-    level: "error",
-    source: "device",
-    message: "Device disconnected before task confirmation.",
+    id: "dev_007",
+    status: "online",
+  },
+  {
+    id: "dev_008",
+    status: "online",
+  },
+  {
+    id: "dev_009",
+    status: "offline",
+  },
+  {
+    id: "dev_010",
+    status: "offline",
+  },
+  {
+    id: "dev_011",
+    status: "offline",
   },
 ];
