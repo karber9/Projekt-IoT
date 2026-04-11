@@ -63,10 +63,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-100">
-      <div className="mx-auto flex h-screen flex-col px-16 py-16 overflow-y-hidden">
+      <div className="mx-auto flex h-screen flex-col px-16 py-16">
         <DashboardHeader />
   
-        <div className="mt-6 grid flex-1 gap-6 lg:grid-cols-12">
+        <div className="mt-6 grid flex-1 gap-6 lg:grid-cols-12 h-5/6">
           <div className="lg:col-span-2 h-5/6">
             <DevicesPanel 
               selectedDeviceId={selectedDeviceId}
@@ -74,28 +74,24 @@ export default function Home() {
             />
           </div>
           
-          <section className="rounded-2xl bg-white p-8 shadow-sm lg:col-span-4 h-5/6">
-          <div className="mb-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-            Target destination:{" "}
-                  <span className="font-semibold">
-                    {selectedDevice?.id === "server"
-                      ? "Automatic server routing"
-                      : selectedDevice?.source ?? "Unknown device"}
-                  </span>
-                </div>
-            <OperationForm
-              operation={operation}
-              setOperation={setOperation}
-              a={a}
-              setA={setA}
-              b={b}
-              setB={setB}
-              loading={loading}
-              onSubmit={handleSubmit}
+          <section className="relative overflow-hidden rounded-2xl bg-white shadow-sm lg:col-span-4 h-5/6">
+            <div className="relative h-full p-8">
+              <OperationForm
+                operation={operation}
+                setOperation={setOperation}
+                a={a}
+                setA={setA}
+                b={b}
+                setB={setB}
+                loading={loading}
+                onSubmit={handleSubmit}
+                error={error}
+              />    
+            </div>
+            <OperationResponseCard
+              response={response}
+              onClose={() => setResponse(null)}
             />
-  
-            <ErrorAlert message={error} />
-            <OperationResponseCard response={response} />
           </section>
           
           <div className="lg:col-span-2 h-5/6">

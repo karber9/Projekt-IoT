@@ -1,3 +1,4 @@
+from time import sleep
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -24,6 +25,7 @@ def root():
 @app.post("/tasks")
 def create_task(task: Task):
     print(f"Received task: {task.operation} with a={task.a} and b={task.b}")
+    sleep(2)  # Simulate some processing time
     return {
         "task_id": 1,
         "status": "queued",

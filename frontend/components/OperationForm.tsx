@@ -1,6 +1,7 @@
 import Spinner from "@/components/Spinner";
 import { ALLOWED_OPERATIONS } from "@/features/constants";
 import type { Operation } from "@/features/types";
+import ErrorAlert from "@/components/ErrorAlert";
 
 type OperationFormProps = {
   operation: Operation;
@@ -11,6 +12,7 @@ type OperationFormProps = {
   setB: (value: string) => void;
   loading: boolean;
   onSubmit: () => void;
+  error: string | null;
 };
 
 export default function OperationForm({
@@ -22,9 +24,10 @@ export default function OperationForm({
   setB,
   loading,
   onSubmit,
+  error,
 }: OperationFormProps) {
   return (
-    <section className="rounded-2xl bg-white p-8 shadow-sm">
+    <div className="rounded-2xl bg-white p-8 shadow-sm">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-slate-800">
           Send operation
@@ -102,7 +105,9 @@ export default function OperationForm({
           {loading && <Spinner />}
           <span>{loading ? "Sending..." : "Send"}</span>
         </button>
+
+        <ErrorAlert message={error || ""} />
       </div>
-    </section>
+    </div>
   );
 }
