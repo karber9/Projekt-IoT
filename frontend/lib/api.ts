@@ -2,6 +2,7 @@ export type TaskRequest = {
     operation: string;
     a: number;
     b: number;
+    device_id: string;
   };
   
   export type TaskResponse = {
@@ -11,6 +12,7 @@ export type TaskRequest = {
       operation: string;
       a: number;
       b: number;
+      device_id: string;
     };
     error?: string;
   };

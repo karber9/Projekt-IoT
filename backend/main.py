@@ -17,6 +17,7 @@ class Task(BaseModel):
     operation: str
     a: int
     b: int
+    device_id: str
 
 @app.get("/")
 def root():
@@ -24,7 +25,7 @@ def root():
 
 @app.post("/tasks")
 def create_task(task: Task):
-    print(f"Received task: {task.operation} with a={task.a} and b={task.b}")
+    print(f"Received task: {task.operation} with a={task.a} and b={task.b} and device_id={task.device_id}")
     sleep(2)  # Simulate some processing time
     return {
         "task_id": 1,
