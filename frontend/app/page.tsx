@@ -7,10 +7,10 @@ import OperationResponseCard from "@/components/OperationResponseCard";
 import DevicesPanel from "@/components/DevicesPanel";
 import LogsPanel from "@/components/LogsPanel";
 import DashboardHeader from "@/components/DashboardHeader";
+import HistoryPanel from "@/components/HistoryPanel";
 import { validateOperationValues } from "@/features/validation";
-import type { Operation } from "@/features/types";
-import { mockLogs } from "@/data/mockDevices";
-
+import type { Operation, HistoryItem } from "@/features/types";
+import {HISTORY_LIMIT} from "@/features/constants";
 
 export default function Home() {
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("serwer");
@@ -20,6 +20,8 @@ export default function Home() {
   const [response, setResponse] = useState<TaskResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   const handleSubmit = async () => {
     setError("");
@@ -45,6 +47,18 @@ export default function Home() {
       });
 
       setResponse(data);
+
+      if (data !== null) {
+        const newHistoryItem: HistoryItem = {
+          id: crypto.randomUUID(),
+          operation,
+          a: parsedA,
+          b: parsedB,
+          response: "success",
+        };
+
+        setHistory((prev) => [newHistoryItem, ...prev].slice(0, HISTORY_LIMIT));
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -60,17 +74,17 @@ export default function Home() {
     <main className="min-h-screen bg-slate-100">
       <div className="mx-auto flex h-screen flex-col px-16 py-16">
         <DashboardHeader />
-  
-        <div className="mt-6 grid flex-1 gap-6 lg:grid-cols-12 h-5/6">
-          <div className="lg:col-span-2 h-5/6">
-          <DevicesPanel
-            selectedDeviceId={selectedDeviceId}
-            onSelectDevice={(id) =>
-              setSelectedDeviceId((prev) => (prev === id ? "serwer" : id))
-            }
-          />
+
+        <div className="mt-6 grid h-5/6 flex-1 gap-6 lg:grid-cols-12">
+          <div className="h-5/6 lg:col-span-2">
+            <DevicesPanel
+              selectedDeviceId={selectedDeviceId}
+              onSelectDevice={(id) =>
+                setSelectedDeviceId((prev) => (prev === id ? "serwer" : id))
+              }
+            />
           </div>
-          
+
           <section className="relative overflow-hidden rounded-2xl bg-white shadow-sm lg:col-span-4 h-5/6">
             <div className="relative h-full p-8">
               <OperationForm
@@ -83,24 +97,20 @@ export default function Home() {
                 loading={loading}
                 onSubmit={handleSubmit}
                 error={error}
-              />    
+              />
             </div>
+
             <OperationResponseCard
               response={response}
               onClose={() => setResponse(null)}
             />
           </section>
-          
-          <div className="lg:col-span-2 h-5/6">
-          <DevicesPanel
-            selectedDeviceId={selectedDeviceId}
-            onSelectDevice={(id) =>
-              setSelectedDeviceId((prev) => (prev === id ? "serwer" : id))
-            }
-          />      
+
+          <div className="h-5/6 lg:col-span-2">
+            <HistoryPanel history={history} />
           </div>
 
-          <div className="lg:col-span-4 h-5/6">
+          <div className="h-5/6 lg:col-span-4">
             <LogsPanel selectedDeviceId={selectedDeviceId} />
           </div>
         </div>
