@@ -12,7 +12,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True)
-    status = Column(String, nullable=False, default="queued")
+    status = Column(String, nullable=False, default="PENDING")
     payload = Column(String, nullable=False)
     result = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True),

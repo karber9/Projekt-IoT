@@ -67,6 +67,12 @@ class MqttService:
 
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             raise RuntimeError(f"MQTT publish failed with error code: {result.rc}")
+        
+        logger.info(
+            "Task dispatched to MQTT topic=%s: message=%s",
+            settings.MQTT_TASK_DISPATCH_TOPIC,
+            message,
+        )
 
     def _on_connect(self, client, _userdata, _flags, rc) -> None:
         if rc != 0:
