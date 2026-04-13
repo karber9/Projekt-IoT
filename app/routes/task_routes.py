@@ -113,4 +113,3 @@ async def create_operation(
         ) from e
     return OperationResponse(operation_id=f"op-{task.id}", status="queued")
 
-
