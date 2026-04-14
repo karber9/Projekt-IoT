@@ -8,7 +8,7 @@ type ErrorAlertProps = {
     }
   
     return (
-      <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-2 text-xs text-red-700">
         {message}
       </div>
     );

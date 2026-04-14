@@ -71,12 +71,11 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100">
-      <div className="mx-auto flex h-screen flex-col px-16 py-16">
+    <main className="h-screen bg-slate-100 mx-auto flex flex-col px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
         <DashboardHeader />
 
-        <div className="mt-6 grid h-5/6 flex-1 gap-6 lg:grid-cols-12">
-          <div className="h-5/6 lg:col-span-2">
+        <div className="mt-6 min-h-0 grid flex-1 gap-6 lg:grid-cols-12">
+          <div className="min-h-0 lg:col-span-2">
             <DevicesPanel
               selectedDeviceId={selectedDeviceId}
               onSelectDevice={(id) =>
@@ -85,8 +84,8 @@ export default function Home() {
             />
           </div>
 
-          <section className="relative overflow-hidden rounded-2xl bg-white shadow-sm lg:col-span-4 h-5/6">
-            <div className="relative h-full p-8">
+          <section className="relative min-h-0 overflow-hidden rounded-2xl bg-white shadow-sm lg:col-span-4">
+            <div className="relative p-4">
               <OperationForm
                 operation={operation}
                 setOperation={setOperation}
@@ -106,15 +105,14 @@ export default function Home() {
             />
           </section>
 
-          <div className="h-5/6 lg:col-span-2">
+          <div className="min-h-0 lg:col-span-2">
             <HistoryPanel history={history} />
           </div>
 
-          <div className="h-5/6 lg:col-span-4">
+          <div className="min-h-0 lg:col-span-4">
             <LogsPanel selectedDeviceId={selectedDeviceId} />
           </div>
         </div>
-      </div>
     </main>
   );
 }

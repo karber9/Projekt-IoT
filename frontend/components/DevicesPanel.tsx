@@ -10,7 +10,7 @@ export default function DevicesPanel({
   onSelectDevice,
 }: DevicesPanelProps) {
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-2xl bg-white p-6 shadow-sm">
+    <section className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm">
       <div className="mb-4 shrink-0">
         <h2 className="text-lg font-semibold text-slate-800">Devices</h2>
         <p className="mt-1 text-xs text-slate-500">
