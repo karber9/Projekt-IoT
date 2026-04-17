@@ -17,11 +17,11 @@ app.include_router(task_router)
 @app.on_event("startup")
 async def on_startup() -> None:
     await init_models()
-    mqtt_service.start()
+    await mqtt_service.start()
 
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
-    mqtt_service.stop()
+    await mqtt_service.stop()
 
 @app.get("/health")
 async def health() -> dict[str, str]:
