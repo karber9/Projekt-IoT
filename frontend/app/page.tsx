@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { createTask, TaskResponse } from "@/lib/api";
+import { useEffect, useState } from "react";
+import {
+  createOperation,
+  getDevices,
+  type Device,
+  type OperationResponse,
+} from "@/lib/api";
 import OperationForm from "@/components/OperationForm";
 import OperationResponseCard from "@/components/OperationResponseCard";
 import DevicesPanel from "@/components/DevicesPanel";
@@ -13,19 +18,42 @@ import type { Operation, HistoryItem } from "@/features/types";
 import {HISTORY_LIMIT} from "@/features/constants";
 
 export default function Home() {
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("serwer");
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [operation, setOperation] = useState<Operation>("add");
   const [a, setA] = useState("");
   const [b, setB] = useState("");
-  const [response, setResponse] = useState<TaskResponse | null>(null);
+  const [response, setResponse] = useState<OperationResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
+  useEffect(() => {
+    const loadDevices = async () => {
+      const result = await getDevices();
+      setDevices(result);
+
+      if (result.length > 0) {
+        setSelectedDeviceId((currentDeviceId) =>
+          result.some((device) => device.device_id === currentDeviceId)
+            ? currentDeviceId
+            : result[0].device_id
+        );
+      }
+    };
+
+    void loadDevices();
+  }, []);
+
   const handleSubmit = async () => {
     setError("");
     setResponse(null);
+
+    if (!selectedDeviceId) {
+      setError("Select a device before sending the operation.");
+      return;
+    }
 
     const validationResult = validateOperationValues({ operation, a, b });
 
@@ -39,7 +67,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const data = await createTask({
+      const data = await createOperation({
         operation,
         a: parsedA,
         b: parsedB,
@@ -77,9 +105,10 @@ export default function Home() {
         <div className="mt-6 min-h-0 grid flex-1 gap-6 lg:grid-cols-12">
           <div className="min-h-0 lg:col-span-2">
             <DevicesPanel
+              devices={devices}
               selectedDeviceId={selectedDeviceId}
               onSelectDevice={(id) =>
-                setSelectedDeviceId((prev) => (prev === id ? "serwer" : id))
+                setSelectedDeviceId((prev) => (prev === id ? "" : id))
               }
             />
           </div>

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { TaskResponse } from "@/lib/api";
+import { type OperationResponse } from "@/lib/api";
 
 type OperationResponseCardProps = {
-  response: TaskResponse | null;
+  response: OperationResponse | null;
   onClose: () => void;
 };
 
@@ -18,11 +18,8 @@ export default function OperationResponseCard({
 
     const textToCopy = [
       "Server Response",
-      `task_id: ${response.task_id}`,
+      `operation_id: ${response.operation_id}`,
       `status: ${response.status}`,
-      response.received
-        ? `received:\n${JSON.stringify(response.received, null, 2)}`
-        : null,
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -61,20 +58,11 @@ export default function OperationResponseCard({
   
             <div className="space-y-2 text-sm text-white">
               <p>
-                <span className="font-semibold">task_id:</span> {response.task_id}
+                <span className="font-semibold">operation_id:</span> {response.operation_id}
               </p>
               <p>
                 <span className="font-semibold">status:</span> {response.status}
               </p>
-  
-              {response.received && (
-                <div>
-                  <p className="mb-1 font-semibold">received:</p>
-                  <pre className="overflow-x-auto rounded-lg bg-white/80 p-4 text-black">
-                    {JSON.stringify(response.received, null, 2)}
-                  </pre>
-                </div>
-              )}
             </div>
           </div>
   
