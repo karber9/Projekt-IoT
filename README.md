@@ -8,3 +8,7 @@ Backend - Serwer FastAPI zarządzający bazą danych, autoryzacją oraz kolejkam
 IoT Communication - Komunikacja za pośrednictwem brokera MQTT.
 Warstwa wykonawcza: Urządzenia Raspberry Pi działające jako agenci nasłuchujący poleceń.
 Data Layer: Relacyjna baza danych PostgreSQL obsługiwana przez SQLAlchemy ORM.
+
+# FRONTEND - KLIENT
+
+Aktualnie klient wysyła requesty na port :8000. Wszystkie requesty i konfiguracja komunikacji z serwerem znajduje się w frontend/lib/api.
