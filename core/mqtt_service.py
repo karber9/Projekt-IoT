@@ -3,8 +3,11 @@ import logging
 import json
 
 from aiomqtt import Client, Message, MqttError
+from sqlalchemy import select
 
 from core.config import settings
+from core.database import AsyncSessionLocal
+from models.task_model import Task
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +78,29 @@ class MqttService:
             return
         
         logger.info("Task result received: task_id=%s, status=%s, result=%s", task_id, task_status, task_result)
+
+        await self._save_result(task_id=int(task_id), task_status=str(task_status), task_result=str(task_result))
+
+
+    async def _save_result(self, task_id: int, task_status: str, task_result: str) -> None:
+        async with AsyncSessionLocal() as session:
+            try:
+                result = await session.execute(
+                    select(Task).where(Task.id == task_id)
+                )
+                task = result.scalar_one_or_none()
+
+                if task is None:
+                    logger.warning("Task %s not found in DB", task_id)
+                    return
+                
+                task.status = task_status
+                task.result = task_result
+                await session.commit()
+                logger.info("Task %s updated: status=%s, result=%s", task_id, task_status, task_result)
+            except Exception:
+                await session.rollback()
+                raise
 
 
     async def publish_task(self, task_id: int, payload: str) -> None:
