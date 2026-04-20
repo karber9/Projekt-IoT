@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  createOperation,
-  getDevices,
-  type Device,
-  type OperationResponse,
-} from "@/lib/api";
+import { dataSource } from "@/lib/data-sources";
 import OperationForm from "@/components/OperationForm";
 import OperationResponseCard from "@/components/OperationResponseCard";
 import DevicesPanel from "@/components/DevicesPanel";
@@ -14,7 +9,12 @@ import LogsPanel from "@/components/LogsPanel";
 import DashboardHeader from "@/components/DashboardHeader";
 import HistoryPanel from "@/components/HistoryPanel";
 import { validateOperationValues } from "@/features/validation";
-import type { Operation, HistoryItem } from "@/features/types";
+import type {
+  Operation,
+  HistoryItem,
+  Device,
+  OperationResponse,
+} from "@/features/types";
 import {HISTORY_LIMIT} from "@/features/constants";
 
 export default function Home() {
@@ -31,16 +31,8 @@ export default function Home() {
 
   useEffect(() => {
     const loadDevices = async () => {
-      const result = await getDevices();
+      const result = await dataSource.getDevices();
       setDevices(result);
-
-      if (result.length > 0) {
-        setSelectedDeviceId((currentDeviceId) =>
-          result.some((device) => device.device_id === currentDeviceId)
-            ? currentDeviceId
-            : result[0].device_id
-        );
-      }
     };
 
     void loadDevices();
@@ -49,11 +41,6 @@ export default function Home() {
   const handleSubmit = async () => {
     setError("");
     setResponse(null);
-
-    if (!selectedDeviceId) {
-      setError("Select a device before sending the operation.");
-      return;
-    }
 
     const validationResult = validateOperationValues({ operation, a, b });
 
@@ -67,7 +54,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const data = await createOperation({
+      const data = await dataSource.createOperation({
         operation,
         a: parsedA,
         b: parsedB,

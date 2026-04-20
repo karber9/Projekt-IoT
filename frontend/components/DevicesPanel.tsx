@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { getDevices, type Device } from "@/lib/api";
+import type { Device } from "@/features/types";
 
 type DevicesPanelProps = {
-  devices?: Device[];
+  devices: Device[];
   selectedDeviceId: string;
   onSelectDevice: (deviceId: string) => void;
 };
@@ -12,23 +11,6 @@ export default function DevicesPanel({
   selectedDeviceId,
   onSelectDevice,
 }: DevicesPanelProps) {
-  const [apiDevices, setApiDevices] = useState<Device[]>([]);
-
-  useEffect(() => {
-    if (devices) {
-      setApiDevices(devices);
-      return;
-    }
-
-    const loadDevices = async () => {
-      const result = await getDevices();
-      setApiDevices(result);
-    };
-
-    void loadDevices();
-  }, [devices]);
-
-  const visibleDevices = devices ?? apiDevices;
 
   return (
     <section className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm">
@@ -40,7 +22,7 @@ export default function DevicesPanel({
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 custom-scrollbar overflow-x-hidden">
-        {visibleDevices.map((device) => {
+        {devices.map((device) => {
           const isSelected = selectedDeviceId === device.device_id;
           const isOnline = device.status === "online";
 
@@ -67,7 +49,7 @@ export default function DevicesPanel({
           );
         })}
 
-        {visibleDevices.length === 0 && (
+        {devices.length === 0 && (
           <div className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">
             No devices available.
           </div>

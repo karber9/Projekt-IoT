@@ -1,51 +1,49 @@
-export type LogItem = {
-  id: string;
-  status: string;
-};
+import type { Device } from "@/features/types";
 
-export const mockLogs: LogItem[] = [
+export const mockDevices: Device[] = [
   {
-    id: "dev_001",
+    device_id: "dev-001",
+    name: "Raspberry Pi 1",
     status: "online",
   },
   {
-    id: "dev_002",
+    device_id: "dev-002",
+    name: "Raspberry Pi 2",
     status: "offline",
   },
   {
-    id: "dev_003",
+    device_id: "dev-003",
+    name: "Test Device",
     status: "online",
   },
   {
-    id: "dev_004",
+    device_id: "dev-004",
+    name: "Raspberry Pi 1",
     status: "online",
   },
   {
-    id: "dev_005",
-    status: "online",
-  },
-  {
-    id: "dev_006",
-    status: "online",
-  },
-  {
-    id: "dev_007",
-    status: "online",
-  },
-  {
-    id: "dev_008",
-    status: "online",
-  },
-  {
-    id: "dev_009",
+    device_id: "dev-005",
+    name: "Raspberry Pi 2",
     status: "offline",
   },
   {
-    id: "dev_010",
+    device_id: "dev-006",
+    name: "Test Device",
+    status: "online",
+  },
+  {
+    device_id: "dev-007",
+    name: "Raspberry Pi 1",
+    status: "online",
+  },
+  {
+    device_id: "dev-008",
+    name: "Raspberry Pi 2",
     status: "offline",
   },
   {
-    id: "dev_011",
-    status: "offline",
+    device_id: "dev-009",
+    name: "Test Device",
+    status: "online",
   },
 ];

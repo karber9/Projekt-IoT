@@ -23,7 +23,7 @@ class Task(BaseModel):
 def root():
     return {"message": "Backend działa"}
 
-@app.post("/tasks")
+@app.post("/tasks/operations")
 def create_task(task: Task):
     print(f"Received task: {task.operation} with a={task.a} and b={task.b} and device_id={task.device_id}")
     sleep(2)  # Simulate some processing time
