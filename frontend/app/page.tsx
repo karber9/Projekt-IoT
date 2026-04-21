@@ -69,7 +69,9 @@ export default function Home() {
           operation,
           a: parsedA,
           b: parsedB,
-          response: "success",
+          device_id: selectedDeviceId,
+          operation_id: data.operation_id,
+          status: data.status,
         };
 
         setHistory((prev) => [newHistoryItem, ...prev].slice(0, HISTORY_LIMIT));

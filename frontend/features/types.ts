@@ -25,5 +25,7 @@ export type HistoryItem = {
   operation: Operation;
   a: number;
   b: number;
-  response: "success";
+  device_id: string;
+  operation_id: string;
+  status: string;
 };

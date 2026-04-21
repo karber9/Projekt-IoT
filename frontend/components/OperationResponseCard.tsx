@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type OperationResponse } from "@/lib/api";
+import type { OperationResponse } from "@/features/types";
 
 type OperationResponseCardProps = {
   response: OperationResponse | null;

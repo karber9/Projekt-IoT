@@ -5,4 +5,4 @@ export const ALLOWED_OPERATIONS = [
     "divide",
   ] as const;
 
-export const HISTORY_LIMIT = 5;
+export const HISTORY_LIMIT = 9;

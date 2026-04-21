@@ -21,7 +21,7 @@ export default function DevicesPanel({
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 custom-scrollbar overflow-x-hidden">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar overflow-x-hidden">
         {devices.map((device) => {
           const isSelected = selectedDeviceId === device.device_id;
           const isOnline = device.status === "online";
@@ -38,7 +38,7 @@ export default function DevicesPanel({
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <p className="font-medium text-slate-800">{device.device_id}</p>
+                <p className="font-medium text-sm text-slate-800">{device.device_id}</p>
                 <span
                 className={`inline-block h-3 w-3 rounded-full ${
                     isOnline ? "bg-green-500" : "bg-red-500"
