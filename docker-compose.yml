@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -21,6 +19,40 @@ services:
     ports:
       - "1883:1883"
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - mosquitto
+    environment:
+      DATABASE_URL: postgresql+asyncpg://iot_user:iot_password@postgres:5432/iot_db
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: 1883
+      MQTT_CLIENT_ID: iot-backend
+    ports:
+      - "8000:8000"
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: 1883
+      MQTT_TASK_DISPATCH_TOPIC: iot/task/dispatch
+      MQTT_TASK_RESULT_TOPIC: iot/task/result
+      MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
+      WORKER_COUNT: 4
+      HEARTBEAT_INTERVAL_SECONDS: 5
+    volumes:
+      - agent_keys:/app/keys
+
   frontend:
     build: ./frontend
     container_name: iot_frontend
@@ -33,3 +65,4 @@ services:
 
 volumes:
   postgres_data:
+  agent_keys:
