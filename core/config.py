@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     MQTT_CLIENT_ID: str = "iot-backend"
     MQTT_KEEPALIVE: int = 60
     MQTT_QOS: int = 1
+    DEVICE_OFFLINE_TIMEOUT_SECONDS: int = 15
 
     # MQTT Topics
     MQTT_TASK_DISPATCH_TOPIC: str = "iot/task/dispatch"

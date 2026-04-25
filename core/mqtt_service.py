@@ -1,12 +1,14 @@
 import asyncio
 import logging
 import json
+from datetime import datetime, timezone
 
 from aiomqtt import Client, Message, MqttError
 from sqlalchemy import select
 
 from core.config import settings
 from core.database import AsyncSessionLocal
+from models.device_model import Device
 from models.task_model import Task
 
 logger = logging.getLogger(__name__)
@@ -47,7 +49,15 @@ class MqttService:
             topic=settings.MQTT_TASK_RESULT_TOPIC,
             qos=settings.MQTT_QOS,
         )
-        logger.info("MQTT client subscribed to topic=%s", settings.MQTT_TASK_RESULT_TOPIC)
+        await self._client.subscribe(
+            topic=settings.MQTT_DEVICE_HEARTBEAT_TOPIC,
+            qos=settings.MQTT_QOS,
+        )
+        logger.info(
+            "MQTT client subscribed to topics=%s,%s",
+            settings.MQTT_TASK_RESULT_TOPIC,
+            settings.MQTT_DEVICE_HEARTBEAT_TOPIC,
+        )
 
         self._listener_task = asyncio.create_task(self._listen())
 
@@ -57,6 +67,8 @@ class MqttService:
             async for message in self._client.messages:
                 if message.topic.matches(settings.MQTT_TASK_RESULT_TOPIC):
                     await self._handle_result_message(message)
+                elif message.topic.matches(settings.MQTT_DEVICE_HEARTBEAT_TOPIC):
+                    await self._handle_heartbeat_message(message)
         except MqttError as e:
             logger.error("MQTT connection lost")
 
@@ -80,6 +92,41 @@ class MqttService:
         logger.info("Task result received: task_id=%s, status=%s, result=%s", task_id, task_status, task_result)
 
         await self._save_result(task_id=int(task_id), task_status=str(task_status), task_result=str(task_result))
+
+
+    async def _handle_heartbeat_message(self, message: Message) -> None:
+        try:
+            decoded_payload = message.payload.decode("utf-8")
+            data = json.loads(decoded_payload)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            logger.warning("Invalid heartbeat payload received from topic=%s", message.topic)
+            return
+
+        device_id = data.get("device_id")
+        if not device_id:
+            logger.warning("Heartbeat without device_id ignored: %s", data)
+            return
+
+        await self._save_heartbeat(device_id=str(device_id))
+
+
+    async def _save_heartbeat(self, device_id: str) -> None:
+        now = datetime.now(timezone.utc)
+        async with AsyncSessionLocal() as session:
+            try:
+                result = await session.execute(select(Device).where(Device.device_id == device_id))
+                device = result.scalar_one_or_none()
+
+                if device is None:
+                    session.add(Device(device_id=device_id, last_seen=now))
+                else:
+                    device.last_seen = now
+
+                await session.commit()
+                logger.info("Heartbeat saved for device=%s", device_id)
+            except Exception:
+                await session.rollback()
+                raise
 
 
     async def _save_result(self, task_id: int, task_status: str, task_result: str) -> None:
