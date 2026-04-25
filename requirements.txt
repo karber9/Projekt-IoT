@@ -3,5 +3,5 @@ pydantic-settings
 uvicorn
 sqlalchemy
 asyncpg
-paho-mqtt
+aiomqtt
 pynacl

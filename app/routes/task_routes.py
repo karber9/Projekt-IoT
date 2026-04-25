@@ -29,7 +29,7 @@ async def create_task(body: TaskCreate, db: AsyncSession = Depends(get_db)) -> T
     await db.refresh(task)
 
     try:
-        mqtt_service.publish_task(task_id=task.id, payload=task.payload)
+        await mqtt_service.publish_task(task_id=task.id, payload=task.payload)
     except RuntimeError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
