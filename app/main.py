@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.task_routes import router as task_router
 from core.mqtt_service import mqtt_service
@@ -12,6 +13,15 @@ logging.basicConfig(
 )
 
 app = FastAPI(title="IoT Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(task_router)
 
 @app.on_event("startup")
