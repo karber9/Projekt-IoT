@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/features/constants";
+
 export type Device = {
   device_id: string;
   status?: string;
@@ -15,8 +17,6 @@ export type OperationResponse = {
   status: string;
 };
 
-const BASE_URL = "http://localhost:8000";
-
 async function parseApiResponse(response: Response) {
   const contentType = response.headers.get("content-type") || "";
 
@@ -29,7 +29,7 @@ async function parseApiResponse(response: Response) {
 
 export async function getDevices(): Promise<Device[]> {
   try {
-    const response = await fetch(`${BASE_URL}/api/devices`);
+    const response = await fetch(`${API_BASE_URL}/tasks/devices`);
     const result = await parseApiResponse(response);
 
     if (!response.ok) {
@@ -45,7 +45,7 @@ export async function getDevices(): Promise<Device[]> {
 export async function createOperation(
   data: OperationRequest
 ): Promise<OperationResponse> {
-  const response = await fetch(`${BASE_URL}/api/operations`, {
+  const response = await fetch(`${API_BASE_URL}/tasks/operations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
