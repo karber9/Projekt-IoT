@@ -7,6 +7,6 @@ class OperationCreate(BaseModel):
     device_id: str
 
 class OperationResponse(BaseModel):
-    operation: str
+    operation_id: str
     status: str
 
