@@ -1,13 +1,16 @@
 import json
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import settings
 from schemas.task_schema import TaskResponse, TaskCreate
 from schemas.device_schema import DeviceResponse
 from schemas.operation_schema import OperationResponse, OperationCreate
 
+from models.device_model import Device
 from models.task_model import Task
 from core.database import get_db
 from core.mqtt_service import mqtt_service
@@ -39,6 +42,36 @@ async def create_task(body: TaskCreate, db: AsyncSession = Depends(get_db)) -> T
     return TaskResponse.model_validate(task)
 
 @router.get(
+    "/devices",
+    response_model=list[DeviceResponse],
+    summary="List all known devices",
+)
+async def get_devices(db: AsyncSession = Depends(get_db)) -> list[DeviceResponse]:
+    """
+    Returns devices discovered by heartbeat with online/offline status.
+    """
+    now = datetime.now(timezone.utc)
+    result = await db.execute(select(Device))
+    devices = result.scalars().all()
+
+    response: list[DeviceResponse] = []
+    for device in devices:
+        last_seen = device.last_seen
+        if last_seen.tzinfo is None:
+            last_seen = last_seen.replace(tzinfo=timezone.utc)
+
+        is_online = (now - last_seen).total_seconds() <= settings.DEVICE_OFFLINE_TIMEOUT_SECONDS
+        response.append(
+            DeviceResponse(
+                device_id=device.device_id,
+                status="online" if is_online else "offline",
+            )
+        )
+
+    response.sort(key=lambda item: item.device_id)
+    return response
+
+@router.get(
     "/{task_id}",
     response_model=TaskResponse,
     summary="Get status and task result",
@@ -54,31 +87,6 @@ async def get_task(task_id: int, db: AsyncSession = Depends(get_db)) -> TaskResp
         )
 
     return TaskResponse.model_validate(task)
-
-@router.get(
-    "/devices",
-    response_model=list[DeviceResponse],
-    summary="List all known devices",
-)
-async def get_devices(db: AsyncSession = Depends(get_db)) -> list[DeviceResponse]:
-    """
-    Returns all device IDs seen in past operations.
-    """
-
-    result = await db.execute(select(Task.payload))
-    payload = result.scalars().all()
-
-    seen: set[str] = set()
-    for raw in payload:
-        try:
-            data = json.loads(raw)
-            device_id = data.get("device_id")
-            if device_id:
-                seen.add(device_id)
-        except (json.JSONDecodeError, AttributeError):
-                continue
-
-    return [DeviceResponse(device_id=d_id) for d_id in sorted(seen)]
 
 @router.post(
     "/operations",
@@ -105,7 +113,7 @@ async def create_operation(
     await db.refresh(task)
 
     try:
-        mqtt_service.publish_task(task_id=task.id, payload=payload)
+        await mqtt_service.publish_task(task_id=task.id, payload=payload)
     except RuntimeError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
