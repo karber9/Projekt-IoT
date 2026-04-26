@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routes.upload_routes import router as upload_router
 from app.routes.task_routes import router as task_router
 from core.mqtt_service import mqtt_service
 from core.database import init_models
@@ -22,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(upload_router)
 app.include_router(task_router)
 
 @app.on_event("startup")
