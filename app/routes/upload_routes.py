@@ -4,6 +4,7 @@ import json
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert
 
 from core.database import get_db
 from models.task_model import Task
@@ -40,12 +41,12 @@ async def upload_tasks(
             detail="Only JSON and CSV files are supported",
         )
 
-    created_tasks = []
-    for item in tasks_data:
-        task = Task(payload=item.get("payload", str(item)))
-        db.add(task)
-        await db.flush()
-        await db.refresh(task)
-        created_tasks.append(TaskResponse.model_validate(task))
+    # bulk insert - save all tasks at once instead of one by one
+    payloads = [{"payload": item.get("payload", str(item))} for item in tasks_data]
+    result = await db.execute(
+        insert(Task).returning(Task),
+        payloads,
+    )
+    created_tasks = result.scalars().all()
 
-    return created_tasks
+    return [TaskResponse.model_validate(task) for task in created_tasks]
