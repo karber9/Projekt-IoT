@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 #Schema for incoming request - data sent by user
 class TaskCreate(BaseModel):
