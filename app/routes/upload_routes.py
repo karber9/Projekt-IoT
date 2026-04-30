@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert
 from core.database import get_db
 from models.task_model import Task
 from schemas.task_schema import TaskResponse
+from app.routes.throttle import dispatch_tasks_in_batches
 
 router = APIRouter(prefix="/tasks", tags=["upload"])
 
@@ -49,4 +50,5 @@ async def upload_tasks(
     )
     created_tasks = result.scalars().all()
 
+    await dispatch_tasks_in_batches(created_tasks)
     return [TaskResponse.model_validate(task) for task in created_tasks]
