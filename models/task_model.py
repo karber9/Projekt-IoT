@@ -1,11 +1,7 @@
 from datetime import datetime, timezone
-
 from sqlalchemy import Column, DateTime, Integer, String
-from sqlalchemy.orm import DeclarativeBase
 
-#Base class for all SQLAlchemy models
-class Base(DeclarativeBase):
-    pass
+from base_model import Base
 
 #Database table model for tasks
 class Task(Base):

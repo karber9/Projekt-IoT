@@ -12,3 +12,16 @@ Data Layer: Relacyjna baza danych PostgreSQL obsługiwana przez SQLAlchemy ORM.
 # FRONTEND - KLIENT
 
 Aktualnie klient wysyła requesty na port :8000. Wszystkie requesty i konfiguracja komunikacji z serwerem znajduje się w frontend/lib/api.
+
+# KONFIGURACJA .env
+
+Po pobraniu kodu źródłowego aplikacji należy sklonować przykładowe środowisko:
+
+```commandline
+cp .env.example .env
+```
+
+i wypełnić je własnymi wartościami. W celu uzyskania klucza tajnego (SECRET_KEY):
+```commandline
+python -c "import secrets; print(secrets.token_hex(32))"
+```

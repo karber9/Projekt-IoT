@@ -5,3 +5,5 @@ sqlalchemy
 asyncpg
 aiomqtt
 pynacl
+passlib[bcrypt]
+python-jose[cryptography]
