@@ -8,6 +8,7 @@ from core.auth import get_current_user
 from schemas.task_schema import TaskResponse, TaskCreate
 from schemas.device_schema import DeviceResponse
 from schemas.operation_schema import OperationResponse, OperationCreate
+from fastapi import WebSocket, HTTPException
 
 from models.user_model import User
 from models.task_model import Task
@@ -104,11 +105,10 @@ async def create_operation(body: OperationCreate, db: AsyncSession = Depends(get
     await db.refresh(task)
 
     try:
-        mqtt_service.publish_task(task_id=task.id, payload=payload)
+        await mqtt_service.publish_task(task_id=task.id, payload=payload)
     except RuntimeError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Operation dispatch failed: {e}",
         ) from e
-    return OperationResponse(operation_id=f"op-{task.id}", status="queued")
-
+    return OperationResponse(operation_id=task.id, user_id=current_user.id, operation=body.operation, status="queued")
