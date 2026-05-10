@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 
 from base_model import Base
 
@@ -8,6 +8,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     status = Column(String, nullable=False, default="PENDING")
     payload = Column(String, nullable=False)
     result = Column(String, nullable=True)
