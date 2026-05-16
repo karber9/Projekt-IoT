@@ -3,6 +3,8 @@ import logging
 from fastapi import FastAPI
 
 from app.routes.task_routes import router as task_router
+from app.routes.auth_routes import router as auth_router
+from app.routes.websocket_routes import router as ws_router
 from core.mqtt_service import mqtt_service
 from core.database import init_models
 
@@ -13,6 +15,8 @@ logging.basicConfig(
 
 app = FastAPI(title="IoT Backend")
 app.include_router(task_router)
+app.include_router(auth_router)
+app.include_router(ws_router)
 
 @app.on_event("startup")
 async def on_startup() -> None:

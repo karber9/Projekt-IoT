@@ -5,6 +5,7 @@ import json
 from aiomqtt import Client, Message, MqttError
 from sqlalchemy import select
 
+from core.websocket_manager import WebSocketManager
 from core.config import settings
 from core.database import AsyncSessionLocal
 from models.task_model import Task
@@ -98,6 +99,11 @@ class MqttService:
                 task.result = task_result
                 await session.commit()
                 logger.info("Task %s updated: status=%s, result=%s", task_id, task_status, task_result)
+                await WebSocketManager.send_to_user(task.user_id, {
+                    "task_id": task_id,
+                    "status": task_status,
+                    "result": task_result,
+                })
             except Exception:
                 await session.rollback()
                 raise
