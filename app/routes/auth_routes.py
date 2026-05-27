@@ -4,12 +4,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core import auth
-from core.auth import hash_password, create_access_token
+from core.auth import hash_password, create_access_token, get_current_user
 from core.database import get_db
 from models.user_model import User
 from schemas.user_schema import UserResponse, TokenResponse, UserCreate
 
 router = APIRouter(prefix="/auth", tags=["authorization"])
+
+
+@router.get(
+    path="/me",
+    response_model=UserResponse,
+    summary="Get current user",
+)
+async def get_me(current_user: User = Depends(get_current_user)):
+    return UserResponse.model_validate(current_user)
 
 @router.post(
     path="/register",
@@ -53,14 +62,15 @@ async def login_user(body: UserCreate, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
         )
 
 
     if auth.verify_password(body.password, user.hashed_password) is False:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
         )
 
     token = create_access_token({"sub": body.email})

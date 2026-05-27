@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 
-from base_model import Base
+from models.base_model import Base
 
 #Database table model for tasks
 class Task(Base):

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, WebSocket, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket, Depends
+from starlette.websockets import WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,10 +22,9 @@ async def websocket_updates(websocket: WebSocket, token: str, db: AsyncSession =
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    manager = WebSocketManager(websocket)
-    await manager.connect(user.id, websocket)
+    await WebSocketManager.connect(user.id, websocket)
     try:
         while True:
             await websocket.receive_text()
-    except:
-        manager.disconnect(user.id)
+    except WebSocketDisconnect:
+        await WebSocketManager.disconnect(user.id)
