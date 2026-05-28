@@ -20,17 +20,14 @@ export type Device = {
 };
 
 export type OperationRequest = {
-  operation: Operation;
-  a: number;
-  b: number;
-  device_id?: string | null;
+  expression: string;
 };
 
 export type OperationResponse = {
   operation_id: string;
   task_id?: number;
   user_id?: number;
-  operation?: Operation | string;
+  expression?: string;
   device_id?: string;
   status: string;
   result?: string | number | null;
@@ -38,10 +35,8 @@ export type OperationResponse = {
 
 export type HistoryItem = {
   id: string;
-  operation: Operation;
-  a: number;
-  b: number;
-  device_id?: string | null;
+  expression: string;
+  device_id?: string;
   operation_id?: string;
   status: string;
 };

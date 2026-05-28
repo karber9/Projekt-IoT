@@ -90,6 +90,12 @@ export default function OperationResponseCard({
                   : "Waiting for the device response..."}
               </p>
 
+              {response.expression && (
+                <p className="text-xs text-white/70">
+                  Expression: {response.expression}
+                </p>
+              )}
+
               {hasResult ? (
                 <pre className="max-h-64 overflow-auto rounded-lg bg-white/15 p-3 text-base font-semibold text-white whitespace-pre-wrap break-words">
                   {resultText}

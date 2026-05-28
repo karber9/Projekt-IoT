@@ -6,29 +6,23 @@ import {
   type OperationResponse,
 } from "@/lib/api";
 import { HISTORY_LIMIT } from "@/features/constants";
-import type { HistoryItem, Operation } from "@/features/types";
+import type { HistoryItem } from "@/features/types";
 import type { RealtimeEvent } from "@/features/realtime/types";
-import { validateOperationValues } from "@/features/validation";
+import { validateOperationExpression } from "@/features/validation";
 
 const OPERATION_POLL_INTERVAL_MS = 1500;
 const OPERATION_TIMEOUT_MS = 20000;
 
 type UseSingleOperationOptions = {
-  selectedDeviceId: string;
-  selectedDeviceUnavailable: boolean;
   realtimeEvents: RealtimeEvent[];
   onUnauthorized: () => void;
 };
 
 export function useSingleOperation({
-  selectedDeviceId,
-  selectedDeviceUnavailable,
   realtimeEvents,
   onUnauthorized,
 }: UseSingleOperationOptions) {
-  const [operation, setOperation] = useState<Operation>("add");
-  const [a, setA] = useState("");
-  const [b, setB] = useState("");
+  const [expression, setExpression] = useState("");
   const [response, setResponse] = useState<OperationResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -164,40 +158,26 @@ export function useSingleOperation({
     setError("");
     setResponse(null);
 
-    if (selectedDeviceUnavailable) {
-      setError(
-        "Selected device is not online. Choose another device or use server auto-select."
-      );
-      return;
-    }
-
-    const validationResult = validateOperationValues({ operation, a, b });
+    const validationResult = validateOperationExpression(expression);
 
     if (!validationResult.isValid) {
       setError(validationResult.error);
       return;
     }
 
-    const { parsedA, parsedB } = validationResult;
-
     setLoading(true);
 
     try {
       const data = await createOperation({
-        operation,
-        a: parsedA,
-        b: parsedB,
-        device_id: selectedDeviceId,
+        expression: validationResult.expression,
       });
 
       setResponse(data);
 
       const newHistoryItem: HistoryItem = {
         id: crypto.randomUUID(),
-        operation,
-        a: parsedA,
-        b: parsedB,
-        device_id: data.device_id ?? selectedDeviceId,
+        expression: validationResult.expression,
+        device_id: data.device_id,
         operation_id: data.operation_id,
         status: data.status,
       };
@@ -219,12 +199,8 @@ export function useSingleOperation({
   };
 
   return {
-    operation,
-    setOperation,
-    a,
-    setA,
-    b,
-    setB,
+    expression,
+    setExpression,
     response,
     setResponse,
     error,

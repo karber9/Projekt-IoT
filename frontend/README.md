@@ -84,18 +84,15 @@ The user can send one operation with:
 
 ```ts
 {
-  operation: "add" | "subtract" | "multiply" | "divide";
-  a: number;
-  b: number;
-  device_id?: string | null;
+  expression: string; // e.g. "21/7" or "2+4"
 }
 ```
 
-If `device_id` is empty, the backend is expected to choose an online device.
+The backend chooses an online device automatically.
 
 ### Batch Operation
 
-The user can switch from `Single operation` to `File batch` mode and upload a JSON or CSV file.
+The user can switch from `Single operation` to `File batch` mode and upload a JSON, CSV, or TXT file.
 
 Batch mode always sends the whole file to the backend. The frontend does not select devices for batch operations. The backend is expected to distribute operations across active devices.
 
@@ -105,27 +102,31 @@ Supported extensions:
 
 - `.json`
 - `.csv`
+- `.txt`
 
 ### JSON
 
-JSON must contain an array of operations:
+JSON must contain an array of expression strings:
 
 ```json
 [
-  { "operation": "add", "a": 2, "b": 3 },
-  { "operation": "multiply", "a": 4, "b": 5 }
+  "21/7",
+  "2+4",
+  "6*9"
 ]
 ```
 
-### CSV
+### CSV / TXT
 
-CSV must contain these headers:
+CSV can contain an `expression` header:
 
 ```csv
-operation,a,b
-add,2,3
-multiply,4,5
+expression
+21/7
+2+4
 ```
+
+TXT and CSV may also contain one expression per line.
 
 Validation performed by the frontend:
 
@@ -134,9 +135,8 @@ Validation performed by the frontend:
 - extension is supported
 - JSON root is an array
 - operation list is not empty
-- each operation has `operation`, `a`, `b`
-- operation is supported
-- `a` and `b` are valid numbers
+- each item is a valid expression
+- expression uses one of `+`, `-`, `*`, `/`
 - division by zero is rejected
 
 No backend file size limit is currently defined in the frontend contract.
@@ -212,10 +212,7 @@ Content-Type: application/json
 
 ```ts
 type OperationRequest = {
-  operation: "add" | "subtract" | "multiply" | "divide";
-  a: number;
-  b: number;
-  device_id?: string | null;
+  expression: string;
 };
 ```
 
@@ -230,7 +227,7 @@ Content-Type: multipart/form-data
 Form field:
 
 ```text
-file=<JSON or CSV file>
+file=<JSON, CSV, or TXT file>
 ```
 
 Expected response:
@@ -240,7 +237,7 @@ type OperationResponse = {
   operation_id: string;
   task_id?: number;
   user_id?: number;
-  operation?: string;
+  expression?: string;
   device_id?: string;
   status: string;
   result?: string | number | null;

@@ -37,9 +37,7 @@ export default function Home() {
 
   const {
     devices,
-    selectedDevice,
     selectedDeviceId,
-    selectedDeviceUnavailable,
     toggleSelectedDevice,
   } = useDevices({
     enabled: isReady && isAuthenticated,
@@ -49,8 +47,6 @@ export default function Home() {
   });
 
   const singleOperation = useSingleOperation({
-    selectedDeviceId,
-    selectedDeviceUnavailable,
     realtimeEvents: realtime.events,
     onUnauthorized: handleUnauthorized,
   });
@@ -92,17 +88,11 @@ export default function Home() {
               <div className="min-h-0 flex-1 overflow-y-auto pr-1 custom-scrollbar">
                 {operationMode === "single" ? (
                   <OperationForm
-                    operation={singleOperation.operation}
-                    setOperation={singleOperation.setOperation}
-                    a={singleOperation.a}
-                    setA={singleOperation.setA}
-                    b={singleOperation.b}
-                    setB={singleOperation.setB}
+                    expression={singleOperation.expression}
+                    setExpression={singleOperation.setExpression}
                     loading={singleOperation.loading}
                     onSubmit={singleOperation.submitOperation}
                     error={singleOperation.error}
-                    selectedDeviceId={selectedDeviceId}
-                    selectedDeviceStatus={selectedDevice?.status}
                   />
                 ) : (
                   <BatchOperationsPanel realtimeEvents={realtime.events} />

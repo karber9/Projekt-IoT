@@ -272,6 +272,8 @@ class MqttService:
             "task_id": task_id,
             "payload": payload,
         }
+        if device_id:
+            message["device_id"] = device_id
 
         try:
             await self._client.publish(

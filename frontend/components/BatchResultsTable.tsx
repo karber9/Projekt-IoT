@@ -23,6 +23,7 @@ export default function BatchResultsTable({ results }: BatchResultsTableProps) {
           <thead className="sticky top-0 bg-slate-50 text-slate-500">
             <tr>
               <th className="w-10 px-2.5 py-1.5 font-medium">#</th>
+              <th className="px-2.5 py-1.5 font-medium">Expression</th>
               <th className="px-2.5 py-1.5 font-medium">Result</th>
               <th className="px-2.5 py-1.5 font-medium">Device</th>
               <th className="px-2.5 py-1.5 font-medium">Status</th>
@@ -38,6 +39,9 @@ export default function BatchResultsTable({ results }: BatchResultsTableProps) {
               return (
                 <tr key={result.operation_id} className="text-slate-700">
                   <td className="px-2.5 py-1.5 text-slate-400">{index + 1}</td>
+                  <td className="truncate px-2.5 py-1.5">
+                    {result.expression ?? "n/a"}
+                  </td>
                   <td className="truncate px-2.5 py-1.5 font-semibold">
                     {hasResult
                       ? String(result.result)

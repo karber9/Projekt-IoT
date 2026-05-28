@@ -1,10 +1,7 @@
-import { ALLOWED_OPERATIONS } from "@/features/constants";
-import type { Operation } from "@/features/types";
+import { validateOperationExpression } from "@/features/validation";
 
 export type BatchOperation = {
-  operation: Operation;
-  a: number;
-  b: number;
+  expression: string;
 };
 
 type ParseResult =
@@ -17,38 +14,27 @@ type ParseResult =
       error: string;
     };
 
-export const SUPPORTED_BATCH_EXTENSIONS = [".json", ".csv"] as const;
-
-function isOperation(value: unknown): value is Operation {
-  return (
-    typeof value === "string" &&
-    ALLOWED_OPERATIONS.includes(value as Operation)
-  );
-}
+export const SUPPORTED_BATCH_EXTENSIONS = [".json", ".csv", ".txt"] as const;
 
 function toBatchOperation(value: unknown, index: number): BatchOperation {
-  if (!value || typeof value !== "object") {
-    throw new Error(`Row ${index + 1} is not an object.`);
+  const expression =
+    typeof value === "string"
+      ? value
+      : value && typeof value === "object"
+        ? (value as Record<string, unknown>).expression
+        : null;
+
+  if (typeof expression !== "string") {
+    throw new Error(`Row ${index + 1} must be an expression.`);
   }
 
-  const item = value as Record<string, unknown>;
-  const operation = item.operation;
-  const a = Number(item.a);
-  const b = Number(item.b);
+  const validation = validateOperationExpression(expression);
 
-  if (!isOperation(operation)) {
-    throw new Error(`Row ${index + 1} has unsupported operation.`);
+  if (!validation.isValid) {
+    throw new Error(`Row ${index + 1}: ${validation.error}`);
   }
 
-  if (!Number.isFinite(a) || !Number.isFinite(b)) {
-    throw new Error(`Row ${index + 1} has invalid numeric values.`);
-  }
-
-  if (operation === "divide" && b === 0) {
-    throw new Error(`Row ${index + 1} divides by zero.`);
-  }
-
-  return { operation, a, b };
+  return { expression: validation.expression };
 }
 
 function parseCsv(content: string): BatchOperation[] {
@@ -60,12 +46,10 @@ function parseCsv(content: string): BatchOperation[] {
 
   const headers = headerLine.split(",").map((header) => header.trim());
 
-  if (
-    !headers.includes("operation") ||
-    !headers.includes("a") ||
-    !headers.includes("b")
-  ) {
-    throw new Error("CSV file must include operation,a,b headers.");
+  if (!headers.includes("expression")) {
+    return [headerLine, ...rows]
+      .filter((row) => row.trim())
+      .map((row, index) => toBatchOperation(row, index));
   }
 
   return rows
@@ -80,6 +64,14 @@ function parseCsv(content: string): BatchOperation[] {
     });
 }
 
+function parseText(content: string): BatchOperation[] {
+  return content
+    .trim()
+    .split(/\r?\n/)
+    .filter((row) => row.trim())
+    .map((row, index) => toBatchOperation(row, index));
+}
+
 export function parseOperationsFile(
   content: string,
   filename: string
@@ -91,17 +83,20 @@ export function parseOperationsFile(
 
     const isCsv = filename.toLowerCase().endsWith(".csv");
     const isJson = filename.toLowerCase().endsWith(".json");
+    const isTxt = filename.toLowerCase().endsWith(".txt");
 
-    if (!isCsv && !isJson) {
+    if (!isCsv && !isJson && !isTxt) {
       return {
         isValid: false,
-        error: "Unsupported file type. Use JSON or CSV.",
+        error: "Unsupported file type. Use JSON, CSV, or TXT.",
       };
     }
 
     const operations = isCsv
       ? parseCsv(content)
-      : parseJsonOperations(content);
+      : isTxt
+        ? parseText(content)
+        : parseJsonOperations(content);
 
     if (operations.length === 0) {
       return { isValid: false, error: "File does not contain operations." };

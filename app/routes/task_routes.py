@@ -2,6 +2,7 @@ import json
 import asyncio
 import csv
 import io
+import re
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -25,7 +26,9 @@ from core.websocket_manager import WebSocketManager
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 BATCH_SIZE = 10
 BATCH_DELAY_SECONDS = 1.0
-ALLOWED_OPERATIONS = {"add", "subtract", "multiply", "divide"}
+EXPRESSION_PATTERN = re.compile(
+    r"^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([+\-*/])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*$"
+)
 
 
 def is_device_online(device: Device, now: datetime) -> bool:
@@ -38,52 +41,73 @@ def is_device_online(device: Device, now: datetime) -> bool:
     ).total_seconds() <= settings.DEVICE_OFFLINE_TIMEOUT_SECONDS
 
 
+def validate_expression(expression: object, index: int | None = None) -> str:
+    label = "Expression" if index is None else f"Row {index + 1}"
+
+    if not isinstance(expression, str) or not expression.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{label} must be a non-empty string.",
+        )
+
+    normalized = expression.strip()
+    match = EXPRESSION_PATTERN.match(normalized)
+    if match is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{label} must use format like 21/7 or 2+4.",
+        )
+
+    operator = match.group(2)
+    right = float(match.group(3))
+    if operator == "/" and right == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{label} divides by zero.",
+        )
+
+    return normalized
+
+
 def validate_operation_payload(item: object, index: int) -> OperationCreate:
+    if isinstance(item, str):
+        return OperationCreate(expression=validate_expression(item, index))
+
     if not isinstance(item, dict):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Row {index + 1} is not an object.",
+            detail=f"Row {index + 1} must be an expression or an object with expression.",
         )
 
-    raw_item = item
-    if isinstance(raw_item.get("payload"), str):
+    expression = item.get("expression")
+    if expression is None and isinstance(item.get("payload"), str):
         try:
-            raw_item = json.loads(raw_item["payload"])
+            raw_payload = json.loads(item["payload"])
         except json.JSONDecodeError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Row {index + 1} payload is not valid JSON.",
-            ) from exc
+            raw_payload = item["payload"]
+        expression = raw_payload.get("expression") if isinstance(raw_payload, dict) else raw_payload
 
-    if not isinstance(raw_item, dict):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Row {index + 1} payload is not an object.",
-        )
+    return OperationCreate(expression=validate_expression(expression, index))
 
-    operation = raw_item.get("operation")
-    if operation not in ALLOWED_OPERATIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Row {index + 1} has unsupported operation.",
-        )
 
-    try:
-        left = float(raw_item.get("a"))
-        right = float(raw_item.get("b"))
-    except (TypeError, ValueError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Row {index + 1} has invalid numeric values.",
-        ) from exc
+def parse_text_rows(content: str) -> list[str]:
+    return [line.strip() for line in content.splitlines() if line.strip()]
 
-    if operation == "divide" and right == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Row {index + 1} divides by zero.",
-        )
 
-    return OperationCreate(operation=operation, a=left, b=right, device_id="")
+def parse_csv_rows(content: str) -> list[object]:
+    lines = parse_text_rows(content)
+    if not lines:
+        return []
+
+    first_line = lines[0]
+    if first_line.strip() != "expression" and "," not in first_line:
+        return lines
+
+    reader = csv.DictReader(io.StringIO(content))
+    if reader.fieldnames and "expression" in reader.fieldnames:
+        return list(reader)
+
+    return lines
 
 
 async def get_online_devices(db: AsyncSession) -> list[Device]:
@@ -105,6 +129,8 @@ async def create_and_dispatch_operation(
     target_mode: str,
     log_request: bool = True,
 ) -> OperationResponse:
+    expression = validate_expression(body.expression)
+
     if log_request:
         await WebSocketManager.send_log_to_user(
             current_user.id,
@@ -112,7 +138,7 @@ async def create_and_dispatch_operation(
             device_id=device_id or None,
             message_type="operation.requested",
             status=target_mode,
-            payload_preview=f"{body.operation}({body.a}, {body.b})",
+            payload_preview=expression,
         )
 
     await WebSocketManager.send_log_to_user(
@@ -124,12 +150,7 @@ async def create_and_dispatch_operation(
         payload_preview=f"device_id={device_id}",
     )
 
-    payload = json.dumps({
-        "device_id": device_id,
-        "operation": body.operation,
-        "a": body.a,
-        "b": body.b,
-    })
+    payload = expression
     task = Task(payload=payload, user_id=current_user.id)
     db.add(task)
     await db.flush()
@@ -142,7 +163,7 @@ async def create_and_dispatch_operation(
             payload=payload,
             user_id=current_user.id,
             device_id=device_id,
-            operation=body.operation,
+            operation=expression,
         )
     except RuntimeError as e:
         raise HTTPException(
@@ -153,7 +174,7 @@ async def create_and_dispatch_operation(
     return OperationResponse(
         operation_id=task.id,
         user_id=current_user.id,
-        operation=body.operation,
+        expression=expression,
         status="queued",
         device_id=device_id,
     )
@@ -222,65 +243,35 @@ async def create_operation(body: OperationCreate, db: AsyncSession = Depends(get
     """
     Stores the operation as a Task and dispatches it via MQTT.
     """
-    device_id = body.device_id.strip()
-    target_mode = "explicit target" if device_id else "server auto-select"
+    expression = validate_expression(body.expression)
+    target_mode = "server auto-select"
+    await WebSocketManager.send_log_to_user(
+        current_user.id,
+        direction="frontend->server",
+        message_type="operation.requested",
+        status=target_mode,
+        payload_preview=expression,
+    )
+    selected_device = next(iter(await get_online_devices(db)), None)
 
-    now = datetime.now(timezone.utc)
-
-    if device_id:
+    if selected_device is None:
         await WebSocketManager.send_log_to_user(
             current_user.id,
-            direction="frontend->server",
-            device_id=device_id,
-            message_type="operation.requested",
-            status=target_mode,
-            payload_preview=f"{body.operation}({body.a}, {body.b})",
+            direction="server",
+            message_type="error",
+            status="no online device",
+            payload_preview=expression,
+            error="No online devices available for operation.",
         )
-        result = await db.execute(select(Device).where(Device.device_id == device_id))
-        selected_device = result.scalar_one_or_none()
-
-        if selected_device is None or not is_device_online(selected_device, now):
-            await WebSocketManager.send_log_to_user(
-                current_user.id,
-                direction="server",
-                device_id=device_id,
-                message_type="error",
-                status="device unavailable",
-                payload_preview=f"{body.operation}({body.a}, {body.b})",
-                error=f"Device {device_id} is not online.",
-            )
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Device {device_id} is not online.",
-            )
-    else:
-        await WebSocketManager.send_log_to_user(
-            current_user.id,
-            direction="frontend->server",
-            message_type="operation.requested",
-            status=target_mode,
-            payload_preview=f"{body.operation}({body.a}, {body.b})",
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No online devices available for operation.",
         )
-        selected_device = next(iter(await get_online_devices(db)), None)
 
-        if selected_device is None:
-            await WebSocketManager.send_log_to_user(
-                current_user.id,
-                direction="server",
-                message_type="error",
-                status="no online device",
-                payload_preview=f"{body.operation}({body.a}, {body.b})",
-                error="No online devices available for operation.",
-            )
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="No online devices available for operation.",
-            )
-
-        device_id = selected_device.device_id
+    device_id = selected_device.device_id
 
     return await create_and_dispatch_operation(
-        body=body,
+        body=OperationCreate(expression=expression),
         db=db,
         current_user=current_user,
         device_id=device_id,
@@ -303,7 +294,9 @@ async def upload_operations(
     filename = file.filename or ""
     content = (await file.read()).decode("utf-8")
 
-    if filename.endswith(".json"):
+    lower_filename = filename.lower()
+
+    if lower_filename.endswith(".json"):
         try:
             raw_data = json.loads(content)
         except json.JSONDecodeError as exc:
@@ -312,12 +305,14 @@ async def upload_operations(
                 detail="Uploaded JSON file is invalid.",
             ) from exc
         rows = raw_data if isinstance(raw_data, list) else [raw_data]
-    elif filename.endswith(".csv"):
-        rows = list(csv.DictReader(io.StringIO(content)))
+    elif lower_filename.endswith(".csv"):
+        rows = parse_csv_rows(content)
+    elif lower_filename.endswith(".txt"):
+        rows = parse_text_rows(content)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only JSON and CSV files are supported.",
+            detail="Only JSON, CSV, and TXT files are supported.",
         )
 
     operations = [

@@ -1,32 +1,8 @@
 [
-  {
-    "operation": "add",
-    "a": 12,
-    "b": 8
-  },
-  {
-    "operation": "subtract",
-    "a": 25,
-    "b": 7
-  },
-  {
-    "operation": "multiply",
-    "a": 6,
-    "b": 9
-  },
-  {
-    "operation": "divide",
-    "a": 144,
-    "b": 12
-  },
-  {
-    "operation": "add",
-    "a": -5,
-    "b": 13
-  },
-  {
-    "operation": "multiply",
-    "a": 3.5,
-    "b": 2
-  }
+  "12+8",
+  "25-7",
+  "6*9",
+  "144/12",
+  "-5+13",
+  "3.5*2"
 ]

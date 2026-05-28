@@ -44,7 +44,7 @@ export function generateBatchReport({
     lines.push("", "Results:");
     responses.forEach((response, index) => {
       lines.push(
-        `${index + 1}. result=${response.result ?? "no result"}; operation_id=${response.operation_id}; device_id=${response.device_id ?? "n/a"}; status=${response.status}`
+        `${index + 1}. expression=${response.expression ?? "n/a"}; result=${response.result ?? "no result"}; operation_id=${response.operation_id}; device_id=${response.device_id ?? "n/a"}; status=${response.status}`
       );
     });
   }

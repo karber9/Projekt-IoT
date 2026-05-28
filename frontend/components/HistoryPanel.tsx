@@ -23,7 +23,7 @@ export default function HistoryPanel({ history }: HistoryPanelProps) {
             <div key={item.id} className="border-b border-slate-200 pb-2.5">
               <div className="flex items-start justify-between gap-2">
                 <p className="break-words text-xs text-slate-700">
-                  {item.operation} | a: {item.a} | b: {item.b}
+                  {item.expression}
                 </p>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusMeta.badgeClassName}`}
@@ -35,6 +35,11 @@ export default function HistoryPanel({ history }: HistoryPanelProps) {
               {item.operation_id && (
                 <p className="mt-1 text-xs text-slate-400">
                   Operation ID: {item.operation_id}
+                </p>
+              )}
+              {item.device_id && (
+                <p className="mt-1 text-xs text-slate-400">
+                  Device: {item.device_id}
                 </p>
               )}
             </div>

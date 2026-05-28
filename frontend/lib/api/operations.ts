@@ -17,7 +17,12 @@ export function normalizeOperationResponse(result: unknown): OperationResponse {
     operation_id: String(rawOperationId),
     task_id: typeof data.task_id === "number" ? data.task_id : undefined,
     user_id: typeof data.user_id === "number" ? data.user_id : undefined,
-    operation: typeof data.operation === "string" ? data.operation : undefined,
+    expression:
+      typeof data.expression === "string"
+        ? data.expression
+        : typeof data.payload === "string"
+          ? data.payload
+          : undefined,
     device_id: typeof data.device_id === "string" ? data.device_id : undefined,
     status: String(data.status),
     result:
@@ -33,10 +38,7 @@ export async function createOperation(
   data: OperationRequest
 ): Promise<OperationResponse> {
   const body = JSON.stringify({
-    operation: data.operation,
-    a: data.a,
-    b: data.b,
-    device_id: data.device_id ?? "",
+    expression: data.expression,
   });
 
   const response = await requestWithFallback(

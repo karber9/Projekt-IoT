@@ -173,7 +173,7 @@ export default function BatchOperationsPanel({
     setBatchResults([]);
 
     if (!selectedFile) {
-      setError("Choose a JSON or CSV file before upload.");
+      setError("Choose a JSON, CSV, or TXT file before upload.");
       return;
     }
 
@@ -321,7 +321,7 @@ export default function BatchOperationsPanel({
           File batch
         </h2>
         <p className="mt-1 text-xs text-slate-500">
-          Upload JSON or CSV with multiple operations.
+          Upload JSON, CSV, or TXT with multiple expressions.
         </p>
       </div>
 
@@ -339,7 +339,7 @@ export default function BatchOperationsPanel({
             ref={fileInputRef}
             id="batch-file"
             type="file"
-            accept=".json,.csv,application/json,text/csv"
+            accept=".json,.csv,.txt,application/json,text/csv,text/plain"
             onChange={handleFileChange}
             disabled={loading}
             className="block w-full text-xs text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-blue-50 file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-blue-700 disabled:cursor-not-allowed"
