@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Column, Integer, String, DateTime
 
-from base_model import Base
+from models.base_model import Base
 
 #Database table model for users
 class User(Base):
