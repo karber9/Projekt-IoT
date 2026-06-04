@@ -19,4 +19,7 @@ class Settings(BaseSettings):
     MQTT_TASK_RESULT_TOPIC: str = "iot/task/result"
     MQTT_DEVICE_HEARTBEAT_TOPIC: str = "iot/device/heartbeat"
 
+    # Encryption
+    ENCRYPTION_KEY: str = ""
+    
 settings = Settings()
