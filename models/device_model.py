@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, String
 
-from models.task_model import Base
+from models.base_model import Base
 
 
 class Device(Base):

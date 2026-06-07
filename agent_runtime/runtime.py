@@ -4,7 +4,14 @@ import threading
 import time
 from typing import Any
 
-from agent_runtime.config import DEVICE_ID, HEARTBEAT_INTERVAL, HEARTBEAT_TOPIC, QUEUE_SIZE, TASK_TOPIC, WORKER_COUNT
+from agent_runtime.config import (
+    DEVICE_ID,
+    HEARTBEAT_INTERVAL,
+    HEARTBEAT_TOPIC,
+    QUEUE_SIZE,
+    TASK_TOPIC,
+    WORKER_COUNT,
+)
 from agent_runtime.processing import handle_task, publish_json
 
 TASK_QUEUE: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=QUEUE_SIZE)

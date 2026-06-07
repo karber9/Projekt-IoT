@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 
 class OperationCreate(BaseModel):
-    operation: str
-    a: float
-    b: float
-    device_id: str
+    expression: str
 
 class OperationResponse(BaseModel):
-    operation_id: str
+    operation_id: int
+    user_id: int
+    expression: str
     status: str
+    device_id: str
 

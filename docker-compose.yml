@@ -23,46 +23,87 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    container_name: iot_backend
     restart: unless-stopped
     depends_on:
       - postgres
       - mosquitto
     environment:
       DATABASE_URL: postgresql+asyncpg://iot_user:iot_password@postgres:5432/iot_db
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
       MQTT_BROKER_HOST: mosquitto
       MQTT_BROKER_PORT: 1883
       MQTT_CLIENT_ID: iot-backend
+      MQTT_KEEPALIVE: 60
+      MQTT_QOS: 1
+      MQTT_TASK_DISPATCH_TOPIC: iot/task/dispatch
+      MQTT_TASK_RESULT_TOPIC: iot/task/result
+      MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
+      DEVICE_OFFLINE_TIMEOUT_SECONDS: 15
     ports:
       - "8000:8000"
 
-  agent:
+  agent_1:
     build:
       context: .
       dockerfile: Dockerfile.agent
+    container_name: iot_agent_1
     restart: unless-stopped
     depends_on:
       - mosquitto
+      - backend
     environment:
+      DEVICE_ID: rpi-agent-001
       MQTT_BROKER_HOST: mosquitto
       MQTT_BROKER_PORT: 1883
       MQTT_TASK_DISPATCH_TOPIC: iot/task/dispatch
       MQTT_TASK_RESULT_TOPIC: iot/task/result
       MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
-      WORKER_COUNT: 4
+      WORKER_COUNT: 2
       HEARTBEAT_INTERVAL_SECONDS: 5
     volumes:
-      - agent_keys:/app/keys
+      - agent_1_keys:/app/keys
+
+  agent_2:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: iot_agent_2
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+      - backend
+    environment:
+      DEVICE_ID: rpi-agent-002
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: 1883
+      MQTT_TASK_DISPATCH_TOPIC: iot/task/dispatch
+      MQTT_TASK_RESULT_TOPIC: iot/task/result
+      MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
+      WORKER_COUNT: 2
+      HEARTBEAT_INTERVAL_SECONDS: 5
+    volumes:
+      - agent_2_keys:/app/keys
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: /backend-api
+        NEXT_PUBLIC_WS_BASE_URL: ws://localhost:8000
+        INTERNAL_API_BASE_URL: http://backend:8000
     container_name: iot_frontend
     restart: unless-stopped
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_BASE_URL: /backend-api
+      NEXT_PUBLIC_WS_BASE_URL: ws://localhost:8000
+      INTERNAL_API_BASE_URL: http://backend:8000
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:
-  agent_keys:
+  agent_1_keys:
+  agent_2_keys:

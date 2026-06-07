@@ -1,9 +1,14 @@
 fastapi
 pydantic-settings
 uvicorn
+websockets
 sqlalchemy
 asyncpg
 aiomqtt
 paho-mqtt
 pynacl
+passlib[bcrypt]
+bcrypt<4
+python-jose[cryptography]
+email-validator
 python-multipart

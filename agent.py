@@ -1,5 +1,6 @@
 import logging
 import threading
+
 from agent_runtime import ensure_crypto_keys, heartbeat_loop, set_public_key, start_workers
 from agent_runtime.config import BROKER_HOST, BROKER_PORT, DEVICE_ID
 from agent_runtime.mqtt_compat import mqtt
@@ -9,6 +10,7 @@ from agent_runtime.runtime import on_message as _on_message_impl
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def on_connect(client, userdata, flags, rc):
     return _on_connect_impl(client, userdata, flags, rc, logger)

@@ -3,11 +3,6 @@ from pathlib import Path
 
 
 def ensure_crypto_keys(logger) -> str | None:
-    """
-    Generates a signing key pair on first start and stores it on disk.
-    On subsequent starts, it reuses the existing private key and derives
-    the public key from it.
-    """
     key_dir = Path(os.getenv("AGENT_KEY_DIR", "/app/keys"))
     private_key_path = key_dir / "signing_private_key.hex"
     public_key_path = key_dir / "signing_public_key.hex"
