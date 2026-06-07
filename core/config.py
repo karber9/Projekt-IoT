@@ -27,5 +27,6 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
 
+    ENCRYPT_PAYLOAD: bool = True
 
 settings = Settings()
