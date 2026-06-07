@@ -2,21 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-ENV NEXT_TELEMETRY_DISABLED=1
-
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-ARG NEXT_PUBLIC_WS_BASE_URL=ws://localhost:8000
-ARG INTERNAL_API_BASE_URL=http://localhost:8000
-
-ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
-ENV NEXT_PUBLIC_WS_BASE_URL=$NEXT_PUBLIC_WS_BASE_URL
-ENV INTERNAL_API_BASE_URL=$INTERNAL_API_BASE_URL
-
 COPY package*.json ./
-RUN npm ci
+RUN npm install
+
 COPY . .
-RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "dev"]

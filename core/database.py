@@ -28,9 +28,5 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 async def init_models() -> None:
-    import models.device_model  # noqa: F401
-    import models.task_model  # noqa: F401
-    import models.user_model  # noqa: F401
-
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)

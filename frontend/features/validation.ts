@@ -1,5 +1,5 @@
-const EXPRESSION_PATTERN =
-  /^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([+\-*/])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*$/;
+import { ALLOWED_OPERATIONS } from "./constants";
+import type { Operation } from "./types";
 
 export const parseNumber = (value: string): number | null => {
   if (value.trim() === "") {
@@ -15,49 +15,55 @@ export const parseNumber = (value: string): number | null => {
   return parsed;
 };
 
+type ValidateOperationValuesParams = {
+  operation: Operation;
+  a: string;
+  b: string;
+};
+
 type ValidateOperationValuesResult =
   | {
       isValid: true;
-      expression: string;
+      parsedA: number;
+      parsedB: number;
     }
   | {
       isValid: false;
       error: string;
     };
 
-export function validateOperationExpression(
-  expression: string
-): ValidateOperationValuesResult {
-  const normalized = expression.trim();
-
-  if (!normalized) {
+export function validateOperationValues({
+  operation,
+  a,
+  b,
+}: ValidateOperationValuesParams): ValidateOperationValuesResult {
+  if (!ALLOWED_OPERATIONS.includes(operation)) {
     return {
       isValid: false,
-      error: "Expression is required.",
+      error: "Selected operation is not allowed.",
     };
   }
 
-  const match = EXPRESSION_PATTERN.exec(normalized);
+  const parsedA = parseNumber(a);
+  const parsedB = parseNumber(b);
 
-  if (!match) {
+  if (parsedA === null || parsedB === null) {
     return {
       isValid: false,
-      error: "Use a simple expression like 21/7 or 2+4.",
+      error: "A and B must be valid finite numbers.",
     };
   }
 
-  const operator = match[2];
-  const right = Number(match[3]);
-
-  if (operator === "/" && right === 0) {
+  if (operation === "divide" && parsedB === 0) {
     return {
       isValid: false,
-      error: "Cannot divide by 0.",
+      error: "B cannot be 0 when dividing.",
     };
   }
 
   return {
     isValid: true,
-    expression: normalized,
+    parsedA,
+    parsedB,
   };
 }
