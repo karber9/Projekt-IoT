@@ -1,4 +1,5 @@
 import os
+import base64
 from pathlib import Path
 
 
@@ -40,3 +41,21 @@ def ensure_crypto_keys(logger) -> str | None:
         public_key_path.write_text(public_key_hex, encoding="utf-8")
 
     return public_key_hex
+
+
+def _get_secret_box():
+    from nacl.secret import SecretBox
+    key_hex = os.getenv("NACL_SECRET_KEY")
+    if not key_hex:
+        raise RuntimeError("NACL_SECRET_KEY not set in environment")
+    return SecretBox(bytes.fromhex(key_hex))
+
+def encrypt_payload(plaintext: str) -> str:
+    box = _get_secret_box()
+    encrypted = box.encrypt(plaintext.encode("utf-8"))
+    return base64.b64encode(encrypted).decode("utf-8")
+
+def decrypt_payload(ciphertext: str) -> str:
+    box = _get_secret_box()
+    raw = base64.b64decode(ciphertext.encode("utf-8"))
+    return box.decrypt(raw).decode("utf-8")
