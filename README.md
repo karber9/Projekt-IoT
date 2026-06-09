@@ -40,7 +40,13 @@ Copy-Item .env.example .env
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-4. Start the full stack:
+4. Generate `NACL_SECRET_KEY` and put it in `.env`:
+
+```bash
+python -c "import nacl.utils; print(nacl.utils.random(32).hex())"
+```
+
+5. Start the full stack:
 
 ```bash
 docker compose up --build
