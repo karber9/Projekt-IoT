@@ -15,7 +15,6 @@ import {
   parseOperationsFile,
 } from "@/features/batch/parseOperationsFile";
 import {
-  downloadTextReport,
   generateBatchReport,
 } from "@/features/batch/generateBatchReport";
 import type { RealtimeEvent } from "@/features/realtime/types";
@@ -23,6 +22,7 @@ import {
   hasOperationFailed,
   isOperationTerminal,
 } from "@/features/status/operationStatus";
+import type { HistoryItem } from "@/features/types";
 
 type BatchState = {
   total: number;
@@ -41,7 +41,7 @@ const emptyBatchState: BatchState = {
 };
 
 const BATCH_RESULT_POLL_INTERVAL_MS = 1000;
-const BATCH_RESULT_TIMEOUT_MS = 30000;
+const BATCH_RESULT_TIMEOUT_MS = 120000;
 
 function formatFileSize(size: number) {
   if (size < 1024) {
@@ -75,13 +75,19 @@ function sleep(durationMs: number) {
 
 type BatchOperationsPanelProps = {
   realtimeEvents?: RealtimeEvent[];
+  onHistoryChange?: (items: HistoryItem[]) => void;
 };
 
 export default function BatchOperationsPanel({
   realtimeEvents = [],
+  onHistoryChange,
 }: BatchOperationsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const sourceFileUrlRef = useRef<string | null>(null);
+  const reportFileUrlRef = useRef<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sourceFileUrl, setSourceFileUrl] = useState("");
+  const [reportFileUrl, setReportFileUrl] = useState("");
   const [operations, setOperations] = useState<BatchOperation[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -108,6 +114,35 @@ export default function BatchOperationsPanel({
     });
   }, [realtimeEvents]);
 
+  useEffect(() => {
+    if (!onHistoryChange || !selectedFile) {
+      return;
+    }
+
+    onHistoryChange([
+      {
+        id: `batch:${selectedFile.name}:${selectedFile.lastModified}`,
+        kind: "batch",
+        expression: selectedFile.name,
+        status: report ? "completed" : loading ? "running" : "queued",
+        created_at: selectedFile.lastModified || Date.now(),
+        source_file_name: selectedFile.name,
+        source_file_url: sourceFileUrl,
+        report_file_name: report ? "batch-operations-report.txt" : undefined,
+        report_file_url: reportFileUrl || undefined,
+        operation_count: operations.length,
+      },
+    ]);
+  }, [
+    loading,
+    onHistoryChange,
+    operations.length,
+    report,
+    reportFileUrl,
+    selectedFile,
+    sourceFileUrl,
+  ]);
+
   const progress = useMemo(() => {
     if (batchState.total === 0) {
       return 0;
@@ -123,10 +158,22 @@ export default function BatchOperationsPanel({
     setError("");
     setSuccess("");
     setReport("");
+    setReportFileUrl("");
     setBatchResults([]);
     setSelectedFile(null);
+    setSourceFileUrl("");
     setOperations([]);
     setBatchState(emptyBatchState);
+    onHistoryChange?.([]);
+
+    if (sourceFileUrlRef.current) {
+      URL.revokeObjectURL(sourceFileUrlRef.current);
+      sourceFileUrlRef.current = null;
+    }
+    if (reportFileUrlRef.current) {
+      URL.revokeObjectURL(reportFileUrlRef.current);
+      reportFileUrlRef.current = null;
+    }
 
     if (!file) {
       return;
@@ -142,6 +189,9 @@ export default function BatchOperationsPanel({
     }
 
     setSelectedFile(file);
+    const nextSourceFileUrl = URL.createObjectURL(file);
+    sourceFileUrlRef.current = nextSourceFileUrl;
+    setSourceFileUrl(nextSourceFileUrl);
     setOperations(result.operations);
     setBatchState({
       total: result.operations.length,
@@ -158,8 +208,19 @@ export default function BatchOperationsPanel({
     setError("");
     setSuccess("");
     setReport("");
+    setReportFileUrl("");
     setBatchResults([]);
     setBatchState(emptyBatchState);
+    onHistoryChange?.([]);
+
+    if (sourceFileUrlRef.current) {
+      URL.revokeObjectURL(sourceFileUrlRef.current);
+      sourceFileUrlRef.current = null;
+    }
+    if (reportFileUrlRef.current) {
+      URL.revokeObjectURL(reportFileUrlRef.current);
+      reportFileUrlRef.current = null;
+    }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -170,7 +231,13 @@ export default function BatchOperationsPanel({
     setError("");
     setSuccess("");
     setReport("");
+    setReportFileUrl("");
     setBatchResults([]);
+
+    if (reportFileUrlRef.current) {
+      URL.revokeObjectURL(reportFileUrlRef.current);
+      reportFileUrlRef.current = null;
+    }
 
     if (!selectedFile) {
       setError("Choose a JSON, CSV, or TXT file before upload.");
@@ -218,13 +285,13 @@ export default function BatchOperationsPanel({
         failed,
       });
       setSuccess(message);
-      setReport(
+      setBatchReport(
         createReport("success", message, finalResponses, undefined, durationMs)
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Batch upload failed.";
       setError(message);
-      setReport(createReport("error", "Batch upload failed.", [], message));
+      setBatchReport(createReport("error", "Batch upload failed.", [], message));
       setBatchState((current) => ({
         ...current,
         running: 0,
@@ -251,6 +318,19 @@ export default function BatchOperationsPanel({
       responses,
       errorDetails,
     });
+
+  const setBatchReport = (content: string) => {
+    if (reportFileUrlRef.current) {
+      URL.revokeObjectURL(reportFileUrlRef.current);
+    }
+
+    const url = URL.createObjectURL(
+      new Blob([content], { type: "text/plain;charset=utf-8" })
+    );
+    reportFileUrlRef.current = url;
+    setReport(content);
+    setReportFileUrl(url);
+  };
 
   const waitForBatchResults = async (
     queuedResponses: OperationResponse[]
@@ -404,15 +484,13 @@ export default function BatchOperationsPanel({
         </button>
 
         {report && (
-          <button
-            type="button"
-            onClick={() =>
-              downloadTextReport("batch-operations-report.txt", report)
-            }
+          <a
+            href={reportFileUrl}
+            download="batch-operations-report.txt"
             className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Download TXT report
-          </button>
+          </a>
         )}
 
         <ErrorAlert message={error} />

@@ -1,5 +1,4 @@
 import type { HistoryItem } from "@/features/types";
-import { getOperationStatusMeta } from "@/features/status/operationStatus";
 
 type HistoryPanelProps = {
   history: HistoryItem[];
@@ -17,23 +16,91 @@ export default function HistoryPanel({ history }: HistoryPanelProps) {
 
       <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-1 custom-scrollbar">
         {history.map((item) => {
-          const statusMeta = getOperationStatusMeta(item.status);
+          if (item.kind === "batch") {
+            return (
+              <div key={item.id} className="border-b border-slate-200 pb-2.5">
+                <div className="space-y-1.5">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      Batch file
+                    </p>
+                    {item.source_file_url ? (
+                      <a
+                        href={item.source_file_url}
+                        download={item.source_file_name}
+                        className="break-words text-xs font-semibold text-blue-700 hover:text-blue-800"
+                      >
+                        {item.source_file_name}
+                      </a>
+                    ) : (
+                      <p className="break-words text-xs text-slate-700">
+                        {item.source_file_name ?? item.expression}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      Results
+                    </p>
+                    {item.report_file_url ? (
+                      <a
+                        href={item.report_file_url}
+                        download={item.report_file_name}
+                        className="break-words text-sm font-semibold text-blue-700 hover:text-blue-800"
+                      >
+                        {item.report_file_name ?? "Download report"}
+                      </a>
+                    ) : (
+                      <p className="break-words text-sm font-semibold text-slate-400">
+                        Report will appear after processing.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {item.operation_count !== undefined && (
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    Operations: {item.operation_count}
+                  </p>
+                )}
+              </div>
+            );
+          }
+
+          const hasResult = item.result !== undefined && item.result !== null;
+          const resultText = hasResult
+            ? String(item.result)
+            : "Waiting for result...";
 
           return (
             <div key={item.id} className="border-b border-slate-200 pb-2.5">
-              <div className="flex items-start justify-between gap-2">
-                <p className="break-words text-xs text-slate-700">
-                  {item.expression}
-                </p>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusMeta.badgeClassName}`}
-                  title={statusMeta.description}
-                >
-                  {statusMeta.label}
-                </span>
+              <div className="space-y-1.5">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    Operation
+                  </p>
+                  <p className="break-words text-xs text-slate-700">
+                    {item.expression}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    Result
+                  </p>
+                  <p
+                    className={[
+                      "break-words text-sm font-semibold",
+                      hasResult ? "text-slate-900" : "text-slate-400",
+                    ].join(" ")}
+                  >
+                    {resultText}
+                  </p>
+                </div>
               </div>
+
               {item.operation_id && (
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1.5 text-xs text-slate-400">
                   Operation ID: {item.operation_id}
                 </p>
               )}

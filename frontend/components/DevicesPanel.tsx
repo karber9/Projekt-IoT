@@ -10,32 +10,14 @@ type DevicesPanelProps = {
 export default function DevicesPanel({
   devices,
   selectedDeviceId,
-  onSelectDevice,
 }: DevicesPanelProps) {
   return (
     <section className="flex h-full flex-col rounded-xl bg-white p-3 shadow-sm sm:p-4">
       <div className="mb-3 shrink-0">
         <h2 className="text-base font-semibold text-slate-800">Devices</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Select a destination device and inspect recent communication flow.
-        </p>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-2 lg:gap-0 lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1">
-        <button
-          type="button"
-          onClick={() => onSelectDevice("")}
-          className={`block min-w-[200px] rounded-lg border p-2 text-left transition lg:w-full lg:min-w-0 ${
-            selectedDeviceId === ""
-              ? "border-blue-500 bg-blue-50 shadow-sm"
-              : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
-          }`}
-        >
-          <p className="text-sm font-medium text-slate-800">Server auto-select</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Let the backend choose an available device.
-          </p>
-        </button>
 
         {devices.map((device) => {
           const isSelected = selectedDeviceId === device.device_id;
@@ -44,11 +26,8 @@ export default function DevicesPanel({
           const encryptionMeta = getDeviceEncryptionMeta(device);
 
           return (
-            <button
+            <div
               key={device.device_id}
-              type="button"
-              disabled={!isOnline}
-              onClick={() => onSelectDevice(device.device_id)}
               className={`block min-w-[200px] rounded-lg border p-2 text-left transition lg:w-full lg:min-w-0 ${
                 isSelected
                   ? "border-blue-500 bg-blue-50 shadow-sm"
@@ -91,7 +70,7 @@ export default function DevicesPanel({
                   )}
                 </div>
               )}
-            </button>
+            </div>
           );
         })}
 

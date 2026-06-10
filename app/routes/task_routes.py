@@ -25,8 +25,8 @@ from core.websocket_manager import WebSocketManager
 
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
-BATCH_SIZE = 10
-BATCH_DELAY_SECONDS = 1.0
+BATCH_SIZE = 4
+BATCH_DELAY_SECONDS = 2.0
 EXPRESSION_PATTERN = re.compile(
     r"^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([+\-*/])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*$"
 )

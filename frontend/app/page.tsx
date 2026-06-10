@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import OperationForm from "@/components/OperationForm";
 import OperationResponseCard from "@/components/OperationResponseCard";
@@ -17,6 +17,8 @@ import { useDevices } from "@/features/dashboard/useDevices";
 import { useSingleOperation } from "@/features/dashboard/useSingleOperation";
 import { useRealtimeEvents } from "@/features/realtime/useRealtimeEvents";
 import { deriveCommunicationLogs } from "@/features/logs/deriveLogs";
+import { HISTORY_LIMIT } from "@/features/constants";
+import type { HistoryItem } from "@/features/types";
 
 export default function Home() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function Home() {
   const realtime = useRealtimeEvents(isAuthenticated ? token : null);
   const logs = deriveCommunicationLogs(realtime.events);
   const [operationMode, setOperationMode] = useState<OperationMode>("single");
+  const [batchHistory, setBatchHistory] = useState<HistoryItem[]>([]);
   const handleUnauthorized = useCallback(() => {
     logout("expired");
     router.replace("/login");
@@ -50,6 +53,14 @@ export default function Home() {
     realtimeEvents: realtime.events,
     onUnauthorized: handleUnauthorized,
   });
+
+  const history = useMemo(
+    () =>
+      [...singleOperation.history, ...batchHistory]
+        .sort((left, right) => right.created_at - left.created_at)
+        .slice(0, HISTORY_LIMIT),
+    [batchHistory, singleOperation.history]
+  );
 
   if (!isReady || !isAuthenticated) {
     return (
@@ -95,7 +106,10 @@ export default function Home() {
                     error={singleOperation.error}
                   />
                 ) : (
-                  <BatchOperationsPanel realtimeEvents={realtime.events} />
+                  <BatchOperationsPanel
+                    realtimeEvents={realtime.events}
+                    onHistoryChange={setBatchHistory}
+                  />
                 )}
               </div>
             </div>
@@ -107,7 +121,7 @@ export default function Home() {
           </section>
 
           <div className="min-h-0 lg:col-span-2">
-            <HistoryPanel history={singleOperation.history} />
+            <HistoryPanel history={history} />
           </div>
 
           <div className="min-h-0 lg:col-span-4">

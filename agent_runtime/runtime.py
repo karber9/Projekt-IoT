@@ -41,6 +41,12 @@ def on_message(client, userdata, msg, logger):
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         logger.warning("Error parsing message on topic=%s: %s", msg.topic, exc)
         return None
+
+    target_device_id = data.get("device_id")
+    if target_device_id is not None and str(target_device_id) != DEVICE_ID:
+        logger.info("Task %s is targeted to %s, skipping on %s", data.get("task_id"), target_device_id, DEVICE_ID)
+        return data
+
     try:
         TASK_QUEUE.put_nowait(data)
     except queue.Full:
