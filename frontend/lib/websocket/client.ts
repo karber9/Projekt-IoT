@@ -1,4 +1,5 @@
 import { WS_BASE_URL } from "@/lib/config";
+import { parseWsMessage } from "@/lib/websocket/crypto";
 import type { RealtimeConnectionStatus, RealtimeEvent } from "@/features/realtime/types";
 
 const LOG_DIRECTIONS = [
@@ -22,6 +23,7 @@ type RealtimeClientOptions = {
   onEvent: (event: RealtimeEvent) => void;
   onStatusChange: (status: RealtimeConnectionStatus) => void;
   onError?: (message: string) => void;
+  decryptPayload?: (payload: string) => string;
   reconnectDelayMs?: number;
 };
 
@@ -79,7 +81,7 @@ export class RealtimeClient {
 
   private handleMessage(message: MessageEvent<string>) {
     try {
-      const data = JSON.parse(message.data) as unknown;
+      const data = parseWsMessage(message.data, this.options.decryptPayload);
       const event = normalizeRealtimeEvent(data);
 
       if (event) {

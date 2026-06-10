@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     NACL_SECRET_KEY: str = ""
     ENCRYPT_PAYLOAD: bool = True
+    ENCRYPT_WEBSOCKET_PAYLOADS: bool = True
     ENCRYPT_DB: bool = True
     DB_ENCRYPTION_KEY: str = ""
 

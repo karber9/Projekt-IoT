@@ -4,6 +4,8 @@ from uuid import uuid4
 
 from fastapi import WebSocket
 
+from core.ws_crypto import prepare_ws_outgoing_message
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[int, WebSocket] = {}
@@ -15,14 +17,17 @@ class ConnectionManager:
     async def disconnect(self, user_id: int) -> None:
         self.active_connections.pop(user_id, None)
 
+    async def _send_message(self, websocket: WebSocket, message: dict[str, Any]) -> None:
+        await websocket.send_text(prepare_ws_outgoing_message(message))
+
     async def send_to_user(self, user_id: int, message: dict[str, Any]) -> None:
         websocket = self.active_connections.get(user_id)
         if websocket:
-            await websocket.send_json(message)
+            await self._send_message(websocket, message)
 
     async def broadcast(self, message: dict[str, Any]) -> None:
         for websocket in self.active_connections.values():
-            await websocket.send_json(message)
+            await self._send_message(websocket, message)
 
     async def send_log_to_user(
         self,
