@@ -33,6 +33,35 @@ export function useSingleOperation({
       return;
     }
 
+    setHistory((currentHistory) =>
+      currentHistory.map((item) => {
+        if (item.operation_id !== response.operation_id) {
+          return item;
+        }
+
+        if (
+          item.status === response.status &&
+          item.result === response.result &&
+          item.device_id === response.device_id
+        ) {
+          return item;
+        }
+
+        return {
+          ...item,
+          status: response.status,
+          result: response.result,
+          device_id: response.device_id ?? item.device_id,
+        };
+      })
+    );
+  }, [response]);
+
+  useEffect(() => {
+    if (!response) {
+      return;
+    }
+
     const taskEvents = realtimeEvents.filter(
       (event) => event.type === "task.updated"
     );
@@ -180,6 +209,8 @@ export function useSingleOperation({
         device_id: data.device_id,
         operation_id: data.operation_id,
         status: data.status,
+        result: data.result,
+        created_at: Date.now(),
       };
 
       setHistory((currentHistory) =>

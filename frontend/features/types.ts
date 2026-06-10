@@ -35,8 +35,16 @@ export type OperationResponse = {
 
 export type HistoryItem = {
   id: string;
+  kind?: "operation" | "batch";
   expression: string;
   device_id?: string;
   operation_id?: string;
   status: string;
+  result?: string | number | null;
+  created_at: number;
+  source_file_name?: string;
+  source_file_url?: string;
+  report_file_name?: string;
+  report_file_url?: string;
+  operation_count?: number;
 };
