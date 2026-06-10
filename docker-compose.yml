@@ -32,7 +32,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://iot_user:iot_password@postgres:5432/iot_db
       SECRET_KEY: ${SECRET_KEY}
       NACL_SECRET_KEY: ${NACL_SECRET_KEY}
+      DB_ENCRYPTION_KEY: ${DB_ENCRYPTION_KEY}
       ENCRYPT_PAYLOAD: ${ENCRYPT_PAYLOAD}
+      ENCRYPT_DB: ${ENCRYPT_DB}
       DEBUG: ${DEBUG}
       MQTT_BROKER_HOST: mosquitto
       MQTT_BROKER_PORT: 1883

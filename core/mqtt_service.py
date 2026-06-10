@@ -9,6 +9,7 @@ from sqlalchemy import select
 from core.websocket_manager import WebSocketManager
 from core.config import settings
 from core.database import AsyncSessionLocal
+from core.db_crypto import decrypt_db_value, encrypt_db_value
 from models.device_model import Device
 from models.task_model import Task
 
@@ -222,11 +223,11 @@ class MqttService:
                     return
                 
                 task.status = task_status
-                task.result = task_result
+                task.result = encrypt_db_value(task_result)
                 await session.commit()
                 payload_device_id = device_id
                 try:
-                    payload = json.loads(task.payload)
+                    payload = json.loads(decrypt_db_value(task.payload) or "")
                     payload_device_id = payload_device_id or payload.get("device_id")
                 except (TypeError, json.JSONDecodeError, AttributeError):
                     pass

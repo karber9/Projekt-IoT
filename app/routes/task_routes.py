@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
 from core.auth import get_current_user
-from schemas.task_schema import TaskResponse, TaskCreate
+from core.db_crypto import encrypt_db_value
+from schemas.task_schema import TaskResponse, TaskCreate, task_to_response
 from schemas.device_schema import DeviceResponse
 from schemas.operation_schema import OperationResponse, OperationCreate
 
@@ -151,7 +152,7 @@ async def create_and_dispatch_operation(
     )
 
     payload = expression
-    task = Task(payload=payload, user_id=current_user.id)
+    task = Task(payload=encrypt_db_value(payload), user_id=current_user.id)
     db.add(task)
     await db.flush()
     await db.refresh(task)
@@ -187,7 +188,7 @@ async def create_and_dispatch_operation(
 )
 async def create_task(body: TaskCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)) -> TaskResponse:
 
-    task = Task(payload=body.payload, user_id=current_user.id)
+    task = Task(payload=encrypt_db_value(body.payload), user_id=current_user.id)
     db.add(task)
     await db.flush()
     await db.refresh(task)
@@ -196,7 +197,7 @@ async def create_task(body: TaskCreate, db: AsyncSession = Depends(get_db), curr
     try:
         await mqtt_service.publish_task(
             task_id=task.id,
-            payload=task.payload,
+            payload=body.payload,
             user_id=current_user.id,
         )
     except RuntimeError as e:
@@ -205,7 +206,7 @@ async def create_task(body: TaskCreate, db: AsyncSession = Depends(get_db), curr
             detail=f"Task dispatch failed: {e}",
         ) from e
 
-    return TaskResponse.model_validate(task)
+    return task_to_response(task)
 
 @router.get(
     "/devices",
@@ -386,4 +387,4 @@ async def get_task(task_id: int, db: AsyncSession = Depends(get_db), current_use
             detail=f"Task {task_id} non existent.",
         )
 
-    return TaskResponse.model_validate(task)
+    return task_to_response(task)
