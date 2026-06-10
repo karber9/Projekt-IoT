@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { WS_NACL_SECRET_KEY } from "@/lib/config";
 import { RealtimeClient } from "@/lib/websocket/client";
+import { decryptWsPayload } from "@/lib/websocket/crypto";
 import type {
   RealtimeConnectionStatus,
   RealtimeEvent,
@@ -28,10 +30,14 @@ export function useRealtimeEvents(token: string | null) {
       return;
     }
 
+    const wsSecretKey = WS_NACL_SECRET_KEY;
     const client = new RealtimeClient({
       token,
       onStatusChange: setStatus,
       onError: (message) => setErrorState({ token, message }),
+      decryptPayload: wsSecretKey
+        ? (payload) => decryptWsPayload(payload, wsSecretKey)
+        : undefined,
       onEvent: (event) => {
         setEventState((current) => {
           const currentEvents = current.token === token ? current.events : [];
