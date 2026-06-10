@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
+from core.db_crypto import encrypt_db_value
 from core.database import get_db
 from models.task_model import Task
-from schemas.task_schema import TaskResponse
+from schemas.task_schema import TaskResponse, task_to_response
 from app.routes.throttle import dispatch_tasks_in_batches
 
 router = APIRouter(prefix="/tasks", tags=["upload"])
@@ -43,7 +44,10 @@ async def upload_tasks(
         )
 
     # bulk insert - save all tasks at once instead of one by one
-    payloads = [{"payload": item.get("payload", str(item))} for item in tasks_data]
+    payloads = [
+        {"payload": encrypt_db_value(str(item.get("payload", str(item))))}
+        for item in tasks_data
+    ]
     result = await db.execute(
         insert(Task).returning(Task),
         payloads,
@@ -51,4 +55,4 @@ async def upload_tasks(
     created_tasks = result.scalars().all()
 
     await dispatch_tasks_in_batches(created_tasks)
-    return [TaskResponse.model_validate(task) for task in created_tasks]
+    return [task_to_response(task) for task in created_tasks]

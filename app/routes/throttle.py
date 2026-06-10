@@ -1,6 +1,7 @@
 import asyncio
 from typing import Sequence
 from models.task_model import Task
+from core.db_crypto import decrypt_db_value
 from core.mqtt_service import mqtt_service
 
 BATCH_SIZE = 10  # number of tasks sent at once
@@ -11,7 +12,10 @@ async def dispatch_tasks_in_batches(tasks: Sequence[Task]) -> None:
     for i in range(0, len(tasks), BATCH_SIZE):
         batch = tasks[i:i + BATCH_SIZE]
         for task in batch:
-            await mqtt_service.publish_task(task_id=task.id, payload=task.payload)
+            await mqtt_service.publish_task(
+                task_id=task.id,
+                payload=decrypt_db_value(task.payload) or "",
+            )
         # wait before sending next batch to avoid overloading the agent
         if i + BATCH_SIZE < len(tasks):
             await asyncio.sleep(DELAY)
