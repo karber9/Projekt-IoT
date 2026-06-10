@@ -32,8 +32,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://iot_user:iot_password@postgres:5432/iot_db
       SECRET_KEY: ${SECRET_KEY}
       NACL_SECRET_KEY: ${NACL_SECRET_KEY}
-      ENCRYPT_PAYLOAD: "true"
-      DEBUG: "False"
+      ENCRYPT_PAYLOAD: ${ENCRYPT_PAYLOAD}
+      DEBUG: ${DEBUG}
       MQTT_BROKER_HOST: mosquitto
       MQTT_BROKER_PORT: 1883
       MQTT_CLIENT_ID: iot-backend
@@ -65,7 +65,7 @@ services:
       WORKER_COUNT: 2
       HEARTBEAT_INTERVAL_SECONDS: 5
       NACL_SECRET_KEY: ${NACL_SECRET_KEY}
-      ENCRYPT_PAYLOAD: "true"
+      ENCRYPT_PAYLOAD: ${ENCRYPT_PAYLOAD}
     volumes:
       - agent_1_keys:/app/keys
 
@@ -88,7 +88,7 @@ services:
       WORKER_COUNT: 2
       HEARTBEAT_INTERVAL_SECONDS: 5
       NACL_SECRET_KEY: ${NACL_SECRET_KEY}
-      ENCRYPT_PAYLOAD: "true"
+      ENCRYPT_PAYLOAD: ${ENCRYPT_PAYLOAD}
     volumes:
       - agent_2_keys:/app/keys
 

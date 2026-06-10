@@ -2,7 +2,7 @@ import json
 import re
 from typing import Any
 
-from agent_runtime.config import DEVICE_ID, RESULT_TOPIC
+from agent_runtime.config import DEVICE_ID, ENCRYPT_PAYLOAD, RESULT_TOPIC
 
 EXPRESSION_PATTERN = re.compile(
     r"^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([+\-*/])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*$"
@@ -10,7 +10,12 @@ EXPRESSION_PATTERN = re.compile(
 
 
 def publish_json(client, topic: str, payload: dict[str, Any]) -> None:
-    client.publish(topic, json.dumps(payload))
+    raw_payload = json.dumps(payload)
+    if ENCRYPT_PAYLOAD:
+        from agent_runtime.crypto import encrypt_payload
+
+        raw_payload = encrypt_payload(raw_payload)
+    client.publish(topic, raw_payload)
 
 
 def calculate_expression(expression: str) -> float:
