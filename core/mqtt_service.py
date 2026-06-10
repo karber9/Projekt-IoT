@@ -117,6 +117,9 @@ class MqttService:
     async def _handle_result_message(self, message: Message) -> None:
         try:
             decoded_payload = message.payload.decode("utf-8")
+            if settings.ENCRYPT_PAYLOAD:
+                from agent_runtime.crypto import decrypt_payload
+                decoded_payload = decrypt_payload(decoded_payload)
             data = json.loads(decoded_payload)
         except (UnicodeDecodeError, json.JSONDecodeError):
             logger.warning("Invalid JSON payload received from topic=%s", message.topic)
@@ -142,6 +145,9 @@ class MqttService:
     async def _handle_heartbeat_message(self, message: Message) -> None:
         try:
             decoded_payload = message.payload.decode("utf-8")
+            if settings.ENCRYPT_PAYLOAD:
+                from agent_runtime.crypto import decrypt_payload
+                decoded_payload = decrypt_payload(decoded_payload)
             data = json.loads(decoded_payload)
         except (UnicodeDecodeError, json.JSONDecodeError):
             logger.warning("Invalid heartbeat payload received from topic=%s", message.topic)
@@ -268,17 +274,19 @@ class MqttService:
         if not self.is_started:
             raise RuntimeError("MQTT client is not started")
 
-        message = {
-            "task_id": task_id,
-            "payload": payload,
-        }
+        message = {"task_id": task_id, "payload": payload}
         if device_id:
             message["device_id"] = device_id
+
+        raw_message = json.dumps(message)
+        if settings.ENCRYPT_PAYLOAD:
+            from agent_runtime.crypto import encrypt_payload
+            raw_message = encrypt_payload(raw_message)
 
         try:
             await self._client.publish(
                 topic=settings.MQTT_TASK_DISPATCH_TOPIC,
-                payload=json.dumps(message),
+                payload=json.dumps(raw_message),
                 qos=settings.MQTT_QOS,
             )
         except MqttError as e:

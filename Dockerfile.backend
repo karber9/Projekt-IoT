@@ -9,6 +9,7 @@ COPY app ./app
 COPY core ./core
 COPY models ./models
 COPY schemas ./schemas
+COPY agent_runtime ./agent_runtime
 
 EXPOSE 8000
 

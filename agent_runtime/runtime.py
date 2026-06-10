@@ -31,8 +31,13 @@ def on_connect(client, userdata, flags, rc, logger):
         logger.error("Connection failed with code: %s", rc)
 
 def on_message(client, userdata, msg, logger):
+    from agent_runtime.config import ENCRYPT_PAYLOAD
     try:
-        data = json.loads(msg.payload.decode("utf-8"))
+        raw = msg.payload.decode("utf-8")
+        if ENCRYPT_PAYLOAD:
+            from agent_runtime.crypto import decrypt_payload
+            raw = decrypt_payload(raw)
+        data = json.loads(raw)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         logger.warning("Error parsing message on topic=%s: %s", msg.topic, exc)
         return None

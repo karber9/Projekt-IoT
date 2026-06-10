@@ -10,3 +10,4 @@ DEVICE_ID = os.getenv("DEVICE_ID", socket.gethostname())
 WORKER_COUNT = max(1, int(os.getenv("WORKER_COUNT", "4")))
 HEARTBEAT_INTERVAL = max(1.0, float(os.getenv("HEARTBEAT_INTERVAL_SECONDS", "5")))
 QUEUE_SIZE = max(1, int(os.getenv("TASK_QUEUE_SIZE", "20")))
+ENCRYPT_PAYLOAD = os.getenv("ENCRYPT_PAYLOAD", "true").lower() == "true"
