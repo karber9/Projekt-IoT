@@ -28,5 +28,6 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     ENCRYPT_PAYLOAD: bool = True
+    NACL_SECRET_KEY: str | None = None
 
 settings = Settings()

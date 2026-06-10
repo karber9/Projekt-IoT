@@ -1,4 +1,5 @@
-import { WS_BASE_URL } from "@/lib/config";
+import { WS_BASE_URL, WS_NACL_SECRET_KEY } from "@/lib/config";
+import { parseWsMessage } from "@/lib/websocket/crypto";
 import type { RealtimeConnectionStatus, RealtimeEvent } from "@/features/realtime/types";
 
 const LOG_DIRECTIONS = [
@@ -79,7 +80,7 @@ export class RealtimeClient {
 
   private handleMessage(message: MessageEvent<string>) {
     try {
-      const data = JSON.parse(message.data) as unknown;
+      const data = parseWsMessage(message.data, WS_NACL_SECRET_KEY);
       const event = normalizeRealtimeEvent(data);
 
       if (event) {

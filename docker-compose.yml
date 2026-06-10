@@ -41,6 +41,8 @@ services:
       MQTT_TASK_RESULT_TOPIC: iot/task/result
       MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
       DEVICE_OFFLINE_TIMEOUT_SECONDS: 15
+      ENCRYPT_PAYLOAD: "true"
+      NACL_SECRET_KEY: ${NACL_SECRET_KEY}
     ports:
       - "8000:8000"
 
@@ -62,6 +64,8 @@ services:
       MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
       WORKER_COUNT: 2
       HEARTBEAT_INTERVAL_SECONDS: 5
+      ENCRYPT_PAYLOAD: "true"
+      NACL_SECRET_KEY: ${NACL_SECRET_KEY}
     volumes:
       - agent_1_keys:/app/keys
 
@@ -83,6 +87,8 @@ services:
       MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
       WORKER_COUNT: 2
       HEARTBEAT_INTERVAL_SECONDS: 5
+      ENCRYPT_PAYLOAD: "true"
+      NACL_SECRET_KEY: ${NACL_SECRET_KEY}
     volumes:
       - agent_2_keys:/app/keys
 
@@ -92,6 +98,7 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: /backend-api
         NEXT_PUBLIC_WS_BASE_URL: ws://localhost:8000
+        NEXT_PUBLIC_NACL_SECRET_KEY: ${NACL_SECRET_KEY}
         INTERNAL_API_BASE_URL: http://backend:8000
     container_name: iot_frontend
     restart: unless-stopped
@@ -99,6 +106,7 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_BASE_URL: /backend-api
       NEXT_PUBLIC_WS_BASE_URL: ws://localhost:8000
+      NEXT_PUBLIC_NACL_SECRET_KEY: ${NACL_SECRET_KEY}
       INTERNAL_API_BASE_URL: http://backend:8000
     ports:
       - "3000:3000"
