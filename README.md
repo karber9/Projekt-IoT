@@ -40,13 +40,23 @@ Copy-Item .env.example .env
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-4. Generate `NACL_SECRET_KEY` and put it in `.env`:
+4. Generate encryption keys and put them in `.env`:
 
 ```bash
 python -c "import nacl.utils; print(nacl.utils.random(32).hex())"
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-5. Start the full stack:
+The first command creates `NACL_SECRET_KEY` for MQTT/WebSocket payload encryption. The second creates `DB_ENCRYPTION_KEY` for encrypted task storage in PostgreSQL.
+
+5. Optionally adjust agent scaling in `.env`:
+
+```env
+AGENT_COUNT=2
+WORKER_COUNT=1
+```
+
+6. Start the full stack:
 
 ```bash
 docker compose up --build
@@ -126,11 +136,11 @@ Example agent configuration:
 DEVICE_ID=rpi-agent-001
 MQTT_BROKER_HOST=localhost
 MQTT_BROKER_PORT=1883
-WORKER_COUNT=2
+WORKER_COUNT=1
 HEARTBEAT_INTERVAL_SECONDS=5
 ```
 
-Docker Compose agent replicas use the `rpi-agent` prefix plus the container hostname, so every replica registers as a separate device.
+In Docker Compose, each agent replica gets a unique `DEVICE_ID` from `DEVICE_ID_PREFIX` plus the container hostname, for example `rpi-agent-projekt-iot-agent-1`.
 
 ### Opening PostgreSQL in Docker
 
@@ -178,7 +188,12 @@ The main configuration template is `.env.example`. Docker Compose defines most r
 | `MQTT_TASK_DISPATCH_TOPIC` | Topic used to dispatch tasks to agents | `iot/task/dispatch` |
 | `MQTT_TASK_RESULT_TOPIC` | Topic used to receive results from agents | `iot/task/result` |
 | `MQTT_DEVICE_HEARTBEAT_TOPIC` | Topic used for device heartbeats | `iot/device/heartbeat` |
-| `DEVICE_OFFLINE_TIMEOUT_SECONDS` | Time after which a device is considered offline | `15` |
+| `DEVICE_OFFLINE_TIMEOUT_SECONDS` | Time after which a device is considered offline and removed from the database | `15` |
+| `ENCRYPT_PAYLOAD` | Encrypt MQTT payloads between backend and agents | `true` |
+| `ENCRYPT_WEBSOCKET_PAYLOADS` | Encrypt WebSocket messages sent to the frontend | `true` |
+| `ENCRYPT_DB` | Encrypt task payload and result fields in PostgreSQL | `true` |
+| `NACL_SECRET_KEY` | 32-byte hex key for MQTT/WebSocket encryption | generated hex token |
+| `DB_ENCRYPTION_KEY` | 32-byte hex key for database field encryption | generated hex token |
 
 ### Frontend
 
@@ -186,22 +201,25 @@ The main configuration template is `.env.example`. Docker Compose defines most r
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | Browser-facing API base URL | `/backend-api` |
 | `NEXT_PUBLIC_WS_BASE_URL` | Browser-facing WebSocket base URL | `ws://localhost:8000` |
+| `NEXT_PUBLIC_WS_NACL_SECRET_KEY` | Browser-side WebSocket decryption key, set from `NACL_SECRET_KEY` in Docker Compose | same as `NACL_SECRET_KEY` |
 | `INTERNAL_API_BASE_URL` | Internal backend URL used by Next.js rewrites | `http://backend:8000` |
 
-### Agent
+### Agent and Docker Compose scaling
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `AGENT_COUNT` | Number of Docker Compose agent containers | `1` |
-| `DEVICE_ID` | Device identifier for a manually started single agent | hostname or prefixed hostname |
+| `AGENT_COUNT` | Number of Docker Compose agent containers (`scale`) | `1` |
+| `WORKER_COUNT` | Number of worker threads inside one agent process | `1` |
+| `DEVICE_ID` | Device identifier for a manually started single agent | hostname |
+| `DEVICE_ID_PREFIX` | Prefix used by Docker Compose replicas when `DEVICE_ID` is empty | `rpi-agent` in Compose |
 | `MQTT_BROKER_HOST` | MQTT broker host | `localhost` |
 | `MQTT_BROKER_PORT` | MQTT broker port | `1883` |
 | `MQTT_TASK_DISPATCH_TOPIC` | Task dispatch topic | `iot/task/dispatch` |
 | `MQTT_TASK_RESULT_TOPIC` | Result topic | `iot/task/result` |
 | `MQTT_DEVICE_HEARTBEAT_TOPIC` | Heartbeat topic | `iot/device/heartbeat` |
-| `WORKER_COUNT` | Number of worker threads in one agent process | `1` |
 | `HEARTBEAT_INTERVAL_SECONDS` | Heartbeat interval | `5` |
 | `TASK_QUEUE_SIZE` | Task queue size | `20` |
+| `ENCRYPT_PAYLOAD` | Encrypt MQTT payloads for agents | `true` |
 
 Set agent container and worker count in `.env`:
 
@@ -210,14 +228,12 @@ AGENT_COUNT=4
 WORKER_COUNT=1
 ```
 
-Docker Compose reads `AGENT_COUNT` from `.env` during compose-file
-interpolation for `scale`. `WORKER_COUNT` is passed to agent containers through
-`env_file`.
-
-Then start the stack:
+- `AGENT_COUNT` is read by Docker Compose during compose-file interpolation for `scale`.
+- `WORKER_COUNT` is passed to agent containers through `env_file`.
+- After changing `AGENT_COUNT`, recreate the stack so the new replica count is applied:
 
 ```bash
-docker compose up --build
+docker compose up -d --build --force-recreate
 ```
 
 ## API
@@ -230,7 +246,7 @@ The backend exposes Swagger UI at `http://localhost:8000/docs`.
 | `POST` | `/auth/register` | Register a user | No |
 | `POST` | `/auth/login` | Log in and receive a JWT | No |
 | `GET` | `/auth/me` | Get the current user | Yes |
-| `GET` | `/tasks/devices` | List known devices and their status | Yes |
+| `GET` | `/tasks/devices` | List online devices | Yes |
 | `POST` | `/tasks/operations` | Create a single operation | Yes |
 | `POST` | `/tasks/upload` | Upload a JSON/CSV/TXT batch file | Yes |
 | `POST` | `/tasks/` | Low-level task creation endpoint | Yes |
@@ -273,7 +289,18 @@ expression
 6*9
 ```
 
-An example batch file is available in `batch-operations.json`. The backend distributes operations across active devices and sends batch progress updates over WebSocket.
+An example batch file is available in `batch-operations.json`. The backend distributes operations across active devices and sends batch progress updates over WebSocket. The frontend polls task status until each batch operation receives a final result.
+
+## Dashboard behavior
+
+The web dashboard provides:
+
+- single-operation and batch-operation modes
+- realtime communication logs over WebSocket
+- recent operation history
+- online device list only
+
+Recent history and communication logs are stored in browser `localStorage` per logged-in user, so they remain visible after a page refresh. Offline devices disappear from the dashboard after the backend offline timeout and are removed from the database.
 
 ## Project Structure
 
