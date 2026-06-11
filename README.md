@@ -63,7 +63,7 @@ After startup, the application is available at:
 | PostgreSQL | `localhost:5432` | Database |
 | MQTT | `localhost:1883` | Mosquitto broker |
 
-Docker Compose starts PostgreSQL, Mosquitto, the backend, the frontend, and two agents.
+Docker Compose starts PostgreSQL, Mosquitto, the backend, the frontend, and the configured number of agents.
 
 ## Key Features
 
@@ -130,6 +130,8 @@ WORKER_COUNT=2
 HEARTBEAT_INTERVAL_SECONDS=5
 ```
 
+Docker Compose agent replicas use the `rpi-agent` prefix plus the container hostname, so every replica registers as a separate device.
+
 ### Opening PostgreSQL in Docker
 
 When the Docker Compose stack is running, open an interactive `psql` session inside the PostgreSQL container:
@@ -159,7 +161,7 @@ Password: iot_password
 
 ## Configuration
 
-The main configuration template is `.env.example`. Docker Compose defines most runtime values for containers in `docker-compose.yml`, while `SECRET_KEY` is read from the local `.env` file.
+The main configuration template is `.env.example`. Docker Compose defines most runtime values for containers in `docker-compose.yml`, while secrets and agent replica settings are read from the local `.env` file.
 
 ### Backend
 
@@ -190,15 +192,33 @@ The main configuration template is `.env.example`. Docker Compose defines most r
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `DEVICE_ID` | Device identifier | hostname |
+| `AGENT_COUNT` | Number of Docker Compose agent containers | `1` |
+| `DEVICE_ID` | Device identifier for a manually started single agent | hostname or prefixed hostname |
 | `MQTT_BROKER_HOST` | MQTT broker host | `localhost` |
 | `MQTT_BROKER_PORT` | MQTT broker port | `1883` |
 | `MQTT_TASK_DISPATCH_TOPIC` | Task dispatch topic | `iot/task/dispatch` |
 | `MQTT_TASK_RESULT_TOPIC` | Result topic | `iot/task/result` |
 | `MQTT_DEVICE_HEARTBEAT_TOPIC` | Heartbeat topic | `iot/device/heartbeat` |
-| `WORKER_COUNT` | Number of worker threads | `4` |
+| `WORKER_COUNT` | Number of worker threads in one agent process | `1` |
 | `HEARTBEAT_INTERVAL_SECONDS` | Heartbeat interval | `5` |
 | `TASK_QUEUE_SIZE` | Task queue size | `20` |
+
+Set agent container and worker count in `.env`:
+
+```env
+AGENT_COUNT=4
+WORKER_COUNT=1
+```
+
+Docker Compose reads `AGENT_COUNT` from `.env` during compose-file
+interpolation for `scale`. `WORKER_COUNT` is passed to agent containers through
+`env_file`.
+
+Then start the stack:
+
+```bash
+docker compose up --build
+```
 
 ## API
 

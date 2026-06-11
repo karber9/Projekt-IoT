@@ -44,51 +44,27 @@ services:
     ports:
       - "8000:8000"
 
-  agent_1:
+  agent:
     build:
       context: .
       dockerfile: Dockerfile.agent
-    container_name: iot_agent_1
     restart: unless-stopped
+    scale: ${AGENT_COUNT:-1}
     depends_on:
       - mosquitto
       - backend
     env_file:
       - .env
     environment:
-      DEVICE_ID: rpi-agent-001
+      DEVICE_ID: ""
+      DEVICE_ID_PREFIX: rpi-agent
       MQTT_BROKER_HOST: mosquitto
       MQTT_BROKER_PORT: 1883
       MQTT_TASK_DISPATCH_TOPIC: iot/task/dispatch
       MQTT_TASK_RESULT_TOPIC: iot/task/result
       MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
-      WORKER_COUNT: 2
-      HEARTBEAT_INTERVAL_SECONDS: 5
     volumes:
-      - agent_1_keys:/app/keys
-
-  agent_2:
-    build:
-      context: .
-      dockerfile: Dockerfile.agent
-    container_name: iot_agent_2
-    restart: unless-stopped
-    depends_on:
-      - mosquitto
-      - backend
-    env_file:
-      - .env
-    environment:
-      DEVICE_ID: rpi-agent-002
-      MQTT_BROKER_HOST: mosquitto
-      MQTT_BROKER_PORT: 1883
-      MQTT_TASK_DISPATCH_TOPIC: iot/task/dispatch
-      MQTT_TASK_RESULT_TOPIC: iot/task/result
-      MQTT_DEVICE_HEARTBEAT_TOPIC: iot/device/heartbeat
-      WORKER_COUNT: 2
-      HEARTBEAT_INTERVAL_SECONDS: 5
-    volumes:
-      - agent_2_keys:/app/keys
+      - /app/keys
 
   frontend:
     build:
@@ -111,5 +87,3 @@ services:
 
 volumes:
   postgres_data:
-  agent_1_keys:
-  agent_2_keys:

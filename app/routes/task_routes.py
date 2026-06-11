@@ -224,10 +224,13 @@ async def get_devices(db: AsyncSession = Depends(get_db), current_user: User = D
 
     response: list[DeviceResponse] = []
     for device in devices:
+        if not is_device_online(device, now):
+            continue
+
         response.append(
             DeviceResponse(
                 device_id=device.device_id,
-                status="online" if is_device_online(device, now) else "offline",
+                status="online",
             )
         )
 

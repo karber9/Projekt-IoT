@@ -73,6 +73,8 @@ class MqttService:
             settings.MQTT_DEVICE_HEARTBEAT_TOPIC,
         )
 
+        await self._remove_stale_devices(notify=False)
+
         self._listener_task = asyncio.create_task(self._listen())
         self._offline_monitor_task = asyncio.create_task(self._monitor_offline_devices())
 
@@ -90,30 +92,49 @@ class MqttService:
     async def _monitor_offline_devices(self) -> None:
         while True:
             await asyncio.sleep(max(1, settings.DEVICE_OFFLINE_TIMEOUT_SECONDS // 3))
-            now = datetime.now(timezone.utc)
+            await self._remove_stale_devices(notify=True)
 
-            async with AsyncSessionLocal() as session:
+    async def _remove_stale_devices(self, *, notify: bool) -> None:
+        now = datetime.now(timezone.utc)
+
+        async with AsyncSessionLocal() as session:
+            try:
                 result = await session.execute(select(Device))
                 devices = result.scalars().all()
+                removed_any = False
 
-            for device in devices:
-                if device.device_id in self._online_devices and not is_device_online(device, now):
-                    self._online_devices.remove(device.device_id)
-                    logger.info("Device %s status changed to offline", device.device_id)
-                    await WebSocketManager.broadcast({
-                        "type": "device.updated",
-                        "device_id": device.device_id,
-                        "status": "offline",
-                        "last_seen": device.last_seen.isoformat(),
-                    })
-                    await WebSocketManager.broadcast_log(
-                        direction="server",
-                        device_id=device.device_id,
-                        message_type="device.status_changed",
-                        status="offline",
-                        payload_preview="online -> offline",
-                    )
+                for device in devices:
+                    if is_device_online(device, now):
+                        continue
 
+                    was_tracked = device.device_id in self._online_devices
+                    self._online_devices.discard(device.device_id)
+
+                    if notify and was_tracked:
+                        logger.info("Device %s status changed to offline", device.device_id)
+                        await WebSocketManager.broadcast({
+                            "type": "device.updated",
+                            "device_id": device.device_id,
+                            "status": "offline",
+                            "last_seen": device.last_seen.isoformat(),
+                        })
+                        await WebSocketManager.broadcast_log(
+                            direction="server",
+                            device_id=device.device_id,
+                            message_type="device.status_changed",
+                            status="offline",
+                            payload_preview="online -> offline",
+                        )
+
+                    await session.delete(device)
+                    logger.info("Removed stale device %s", device.device_id)
+                    removed_any = True
+
+                if removed_any:
+                    await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
 
     async def _handle_result_message(self, message: Message) -> None:
         try:

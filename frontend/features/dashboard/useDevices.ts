@@ -36,7 +36,7 @@ export function useDevices({
   const loadDevices = useCallback(async () => {
     try {
       const result = await getDevices();
-      setDevices(result);
+      setDevices(result.filter((device) => device.status === "online"));
     } catch (err) {
       if (err instanceof ApiUnauthorizedError) {
         onUnauthorized();
@@ -94,6 +94,11 @@ export function useDevices({
         );
 
         for (const event of [...deviceEvents].reverse()) {
+          if (event.status !== "online") {
+            nextDevices.delete(event.device_id);
+            continue;
+          }
+
           const currentDevice = nextDevices.get(event.device_id);
           nextDevices.set(event.device_id, {
             ...currentDevice,
