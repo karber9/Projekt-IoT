@@ -17,6 +17,14 @@ import { useDevices } from "@/features/dashboard/useDevices";
 import { useSingleOperation } from "@/features/dashboard/useSingleOperation";
 import { useRealtimeEvents } from "@/features/realtime/useRealtimeEvents";
 import { deriveCommunicationLogs } from "@/features/logs/deriveLogs";
+import {
+  getDashboardStorageKey,
+  mergeDashboardHistory,
+  mergeDashboardLogs,
+  readDashboardState,
+  writeDashboardHistory,
+  writeDashboardLogs,
+} from "@/features/dashboard/dashboardStorage";
 import { HISTORY_LIMIT } from "@/features/constants";
 import type { HistoryItem } from "@/features/types";
 
@@ -24,7 +32,18 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, isReady, logout, token, userEmail } = useAuth();
   const realtime = useRealtimeEvents(isAuthenticated ? token : null);
-  const logs = deriveCommunicationLogs(realtime.events);
+  const storageKey = useMemo(
+    () => getDashboardStorageKey(isAuthenticated ? userEmail ?? token : null),
+    [isAuthenticated, token, userEmail]
+  );
+  const liveLogs = useMemo(
+    () => deriveCommunicationLogs(realtime.events),
+    [realtime.events]
+  );
+  const storedState = useMemo(
+    () => readDashboardState(storageKey),
+    [storageKey]
+  );
   const [operationMode, setOperationMode] = useState<OperationMode>("single");
   const [batchHistory, setBatchHistory] = useState<HistoryItem[]>([]);
   const handleUnauthorized = useCallback(() => {
@@ -54,13 +73,37 @@ export default function Home() {
     onUnauthorized: handleUnauthorized,
   });
 
-  const history = useMemo(
+  const liveHistory = useMemo(
     () =>
       [...singleOperation.history, ...batchHistory]
         .sort((left, right) => right.created_at - left.created_at)
         .slice(0, HISTORY_LIMIT),
     [batchHistory, singleOperation.history]
   );
+  const history = useMemo(
+    () => mergeDashboardHistory(liveHistory, storedState.history),
+    [liveHistory, storedState.history]
+  );
+  const logs = useMemo(
+    () => mergeDashboardLogs(liveLogs, storedState.logs),
+    [liveLogs, storedState.logs]
+  );
+
+  useEffect(() => {
+    if (!storageKey) {
+      return;
+    }
+
+    writeDashboardHistory(storageKey, history);
+  }, [history, storageKey]);
+
+  useEffect(() => {
+    if (!storageKey) {
+      return;
+    }
+
+    writeDashboardLogs(storageKey, logs);
+  }, [logs, storageKey]);
 
   if (!isReady || !isAuthenticated) {
     return (

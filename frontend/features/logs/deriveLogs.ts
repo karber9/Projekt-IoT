@@ -4,7 +4,7 @@ import type { RealtimeEvent } from "@/features/realtime/types";
 export function deriveCommunicationLogs(
   events: RealtimeEvent[]
 ): CommunicationLog[] {
-  return events.map((event, index) => {
+  return events.map((event) => {
     const timestamp = event.received_at ?? new Date().toISOString();
 
     if (event.type === "communication.log") {
@@ -13,7 +13,7 @@ export function deriveCommunicationLogs(
 
     if (event.type === "task.updated") {
       return {
-        id: `task-${event.task_id}-${index}`,
+        id: `task-${event.task_id}-${event.status}-${timestamp}`,
         timestamp,
         direction: "device->server",
         device_id: event.device_id,
@@ -27,7 +27,7 @@ export function deriveCommunicationLogs(
 
     if (event.type === "device.updated") {
       return {
-        id: `device-${event.device_id}-${index}`,
+        id: `device-${event.device_id}-${event.status}-${timestamp}`,
         timestamp,
         direction: "server",
         device_id: event.device_id,
@@ -37,7 +37,7 @@ export function deriveCommunicationLogs(
     }
 
     return {
-      id: `batch-${event.batch_id}-${index}`,
+      id: `batch-${event.batch_id}-${event.completed}-${event.failed}-${timestamp}`,
       timestamp,
       direction: "server",
       message_type: "batch.progress",
