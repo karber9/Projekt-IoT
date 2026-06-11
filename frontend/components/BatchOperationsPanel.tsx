@@ -61,8 +61,7 @@ function formatDuration(durationMs: number) {
 
 function hasFinalResult(response: OperationResponse) {
   return (
-    response.result !== undefined ||
-    response.result === null ||
+    (response.result !== undefined && response.result !== null) ||
     isOperationTerminal(response.status)
   );
 }
